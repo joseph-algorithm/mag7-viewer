@@ -130,6 +130,34 @@ body {
 	letter-spacing: 0.02em;
 }
 
+/* Dragging a range across the plot would otherwise select the axis labels as text. */
+.card-chart {
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.card-header-right {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+}
+
+.reset-zoom {
+	padding: 0.15rem 0.45rem;
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	background: transparent;
+	color: var(--muted);
+	font: inherit;
+	font-size: 0.6875rem;
+	cursor: pointer;
+}
+
+.reset-zoom:hover {
+	color: var(--text);
+	border-color: var(--axis);
+}
+
 .delta {
 	font-size: 0.875rem;
 	font-variant-numeric: tabular-nums;
