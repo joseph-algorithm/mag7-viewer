@@ -1,0 +1,61 @@
+"""HTTP surface: query validation, error mapping, and JSON shaping."""
+
+from __future__ import annotations
+
+from datetime import date
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+
+from .fetcher import PriceFetchError
+from .models import MAG7
+from .service import ReturnsService
+
+router = APIRouter()
+
+#: Guards against a request that would pull decades of data in one call.
+MAX_RANGE_DAYS = 365 * 10
+
+
+def get_service(request: Request) -> ReturnsService:
+    """Resolve the process-wide service instance attached at app startup."""
+    service: ReturnsService = request.app.state.returns_service
+    return service
+
+
+@router.get("/returns")
+def get_returns(
+    start: Annotated[date, Query(description="Inclusive start date, YYYY-MM-DD")],
+    end: Annotated[date, Query(description="Inclusive end date, YYYY-MM-DD")],
+    service: Annotated[ReturnsService, Depends(get_service)],
+) -> dict[str, list[dict[str, Any]]]:
+    """Daily percentage returns per MAG7 symbol over the inclusive date range."""
+    if start > end:
+        raise HTTPException(status_code=400, detail="start must be on or before end")
+    if (end - start).days > MAX_RANGE_DAYS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"date range is limited to {MAX_RANGE_DAYS} days",
+        )
+
+    try:
+        records = service.get_returns(start, end)
+    except PriceFetchError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return {
+        symbol: [point.model_dump(by_alias=True) for point in points]
+        for symbol, points in records.items()
+    }
+
+
+@router.get("/symbols")
+def get_symbols() -> dict[str, list[str]]:
+    """The symbol universe, so the UI does not hardcode the ticker list."""
+    return {"symbols": list(MAG7)}
+
+
+@router.get("/health")
+def health() -> dict[str, str]:
+    """Liveness probe."""
+    return {"status": "ok"}
