@@ -24,10 +24,14 @@ Two terminals, or `make dev` to run both at once.
 cd backend
 uv venv
 uv pip install -e '.[dev]'
-.venv/bin/python -m uvicorn app.main:app --reload --port 8000
+uv run dev
 ```
 
 The API is then on <http://localhost:8000> (interactive docs at `/docs`).
+
+`uv run dev` is a `[project.scripts]` entry point that starts uvicorn with autoreload.
+It takes `--host`, `--port`, and `--no-reload`, and reads `HOST`/`PORT` from the
+environment — for example `uv run dev --port 8010`.
 
 ### Frontend
 

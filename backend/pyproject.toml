@@ -10,6 +10,10 @@ dependencies = [
     "pandas>=2.2",
 ]
 
+[project.scripts]
+# `uv run dev` starts the API with autoreload.
+dev = "app.dev:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3",
