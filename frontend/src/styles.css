@@ -595,3 +595,19 @@ body {
 	text-align: center;
 	white-space: nowrap;
 }
+
+/*
+ * Live preview of a drag across the brush track. Centred on the brush band via
+ * the same measured value the reset control uses, so it tracks the slider
+ * rather than the container.
+ */
+.track-selection {
+	position: absolute;
+	height: 18px;
+	transform: translateY(-50%);
+	background: var(--axis);
+	opacity: 0.45;
+	border-radius: 2px;
+	pointer-events: none;
+	z-index: 2;
+}

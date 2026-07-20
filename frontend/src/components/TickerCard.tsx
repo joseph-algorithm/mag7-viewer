@@ -14,6 +14,7 @@ import {
 
 import { ResetZoomButton } from './ResetZoomButton'
 import { placeBrushLabels } from '../lib/brushLabels'
+import { selectionFromDrag } from '../lib/brushSelect'
 import { isDragGesture } from '../lib/dragIntent'
 import { clampRange, fullRange, isFullRange, resolveDragSelection } from '../lib/dragRange'
 import { computeStats, formatPercent } from '../lib/stats'
@@ -70,6 +71,10 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 	 * drifts down as soon as anything is added underneath.
 	 */
 	const [brushCenterY, setBrushCenterY] = useState<number | null>(null)
+	/** Live preview of a drag across the brush track, in track coordinates. */
+	const [trackDrag, setTrackDrag] = useState<{ startX: number; endX: number } | null>(null)
+	/** Current zoom state, read inside native listeners without re-binding them. */
+	const zoomedRef = useRef(false)
 	/**
 	 * Native pointer x at mousedown, for telling a zoom drag from a click.
 	 *
@@ -91,6 +96,82 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 
 	const visible = clampRange(range, points.length)
 	const zoomed = !isFullRange(visible, points.length)
+	zoomedRef.current = zoomed
+
+	/**
+	 * Drag-to-select across the brush track.
+	 *
+	 * Recharts only handles its own travellers and slide; pressing the empty
+	 * track does nothing, despite the track showing a crosshair. Wired with
+	 * native listeners on the track rect so Recharts' own handle and window
+	 * dragging keep working untouched — an overlay would swallow both.
+	 */
+	useEffect(() => {
+		const host = chartRef.current
+		if (!host) return
+
+		const track = host.querySelector<SVGRectElement>('.recharts-brush > rect:not([class])')
+		const slide = host.querySelector<SVGRectElement>('.recharts-brush-slide')
+		const brush = host.querySelector('.recharts-brush')
+		if (!track || !brush) return
+
+		let startX: number | null = null
+
+		/** Container-relative, so the same numbers drive the maths and the preview. */
+		function geometry() {
+			const hostBox = (host as HTMLElement).getBoundingClientRect()
+			const box = (brush as Element).getBoundingClientRect()
+			return {
+				brushLeft: box.left - hostBox.left,
+				brushWidth: box.width,
+				pointCount: points.length,
+			}
+		}
+
+		function relativeX(event: MouseEvent) {
+			return event.clientX - (host as HTMLElement).getBoundingClientRect().left
+		}
+
+		function onDown(event: MouseEvent) {
+			// Left button only; anything else is not a range gesture.
+			if (event.button !== 0) return
+			/*
+			 * At full range the slide covers almost the whole track, so a
+			 * track-only gesture would be unreachable in the state users start in.
+			 * There is also nothing to pan when everything is already shown, so a
+			 * drag on the window means "select" — and once zoomed, the window goes
+			 * back to panning, which is what it is good for.
+			 */
+			if (event.currentTarget === slide && zoomedRef.current) return
+			startX = relativeX(event)
+			setTrackDrag({ startX, endX: startX })
+			event.preventDefault()
+		}
+
+		function onMove(event: MouseEvent) {
+			if (startX === null) return
+			setTrackDrag({ startX, endX: relativeX(event) })
+		}
+
+		function onUp(event: MouseEvent) {
+			if (startX === null) return
+			const selection = selectionFromDrag(startX, relativeX(event), geometry())
+			startX = null
+			setTrackDrag(null)
+			if (selection) setRange(selection)
+		}
+
+		track.addEventListener('mousedown', onDown)
+		slide?.addEventListener('mousedown', onDown)
+		window.addEventListener('mousemove', onMove)
+		window.addEventListener('mouseup', onUp)
+		return () => {
+			track.removeEventListener('mousedown', onDown)
+			slide?.removeEventListener('mousedown', onDown)
+			window.removeEventListener('mousemove', onMove)
+			window.removeEventListener('mouseup', onUp)
+		}
+	}, [points.length, brushCenterY])
 
 	/**
 	 * Measure the brush handles and place the labels under them.
@@ -327,6 +408,17 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 				 * inline on the slider row, where they crowd the handles and collide
 				 * with the reset control; those are hidden in CSS.
 				 */}
+				{trackDrag && brushCenterY !== null && (
+					<div
+						className="track-selection"
+						style={{
+							left: Math.min(trackDrag.startX, trackDrag.endX),
+							width: Math.abs(trackDrag.endX - trackDrag.startX),
+							top: brushCenterY,
+						}}
+					/>
+				)}
+
 				{labelPlacement && (
 					<div className="brush-labels">
 						<span className="brush-label" style={{ left: labelPlacement.left }}>
