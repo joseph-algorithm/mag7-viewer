@@ -5,6 +5,8 @@ A full-stack app for exploring daily percentage returns of the MAG7 stocks
 
 FastAPI + pandas + yfinance on the back end, React 18 + TypeScript + Recharts on the front.
 
+Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGENTS.md](AGENTS.md).
+
 ## Features
 
 **Charts**
