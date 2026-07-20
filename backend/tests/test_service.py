@@ -63,3 +63,40 @@ def test_fetch_errors_propagate(close_frame: pd.DataFrame) -> None:
 
     with pytest.raises(PriceFetchError, match="upstream down"):
         service.get_returns(START, END)
+
+
+def test_missing_symbol_is_reported_with_a_reason(close_frame: pd.DataFrame) -> None:
+    partial = close_frame.drop(columns=["TSLA"])
+    service = ReturnsService(fetch=lambda symbols, start, end: partial)
+
+    payload = service.get_returns(START, END)
+
+    assert "TSLA" not in payload.data
+    assert [item.symbol for item in payload.unavailable] == ["TSLA"]
+    assert "no data" in payload.unavailable[0].reason
+
+
+def test_symbol_with_prices_but_no_complete_day_is_distinguished() -> None:
+    """A symbol present-but-unusable reports a different reason than one absent."""
+    frame = pd.DataFrame(
+        {"MSFT": [100.0, 101.0], "AAPL": [50.0, float("nan")]},
+        index=pd.to_datetime(["2024-01-02", "2024-01-03"]),
+    )
+    service = ReturnsService(fetch=lambda symbols, start, end: frame)
+
+    payload = service.get_returns(START, END)
+    reasons = {item.symbol: item.reason for item in payload.unavailable}
+
+    assert set(payload.data) == {"MSFT"}
+    assert "prior close" in reasons["AAPL"]
+    assert "no data" in reasons["GOOGL"]
+
+
+def test_unavailable_list_survives_the_cache(close_frame: pd.DataFrame) -> None:
+    partial = close_frame.drop(columns=["TSLA"])
+    service = ReturnsService(fetch=lambda symbols, start, end: partial)
+
+    first = service.get_returns(START, END)
+    second = service.get_returns(START, END)
+
+    assert first.unavailable == second.unavailable

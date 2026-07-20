@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ReturnsBySymbol } from '../types'
+import type { ReturnsResponse } from '../types'
 import { isRefreshing, viewState } from './viewState'
 
-const data: ReturnsBySymbol = { MSFT: [{ date: '2024-01-03', return: 0.01 }] }
+const data: ReturnsResponse = {
+	data: { MSFT: [{ date: '2024-01-03', return: 0.01 }] },
+	unavailable: [],
+}
+const emptyData: ReturnsResponse = { data: {}, unavailable: [] }
 
 describe('viewState', () => {
 	it('shows skeletons only on the first load', () => {
@@ -19,7 +23,7 @@ describe('viewState', () => {
 	})
 
 	it('reports an empty range when the payload has no symbols', () => {
-		expect(viewState({ data: {}, loading: false, error: null })).toBe('empty')
+		expect(viewState({ data: emptyData, loading: false, error: null })).toBe('empty')
 	})
 
 	it('renders nothing under the banner when an error cleared the data', () => {
@@ -32,6 +36,6 @@ describe('isRefreshing', () => {
 		expect(isRefreshing({ data, loading: true })).toBe(true)
 		expect(isRefreshing({ data, loading: false })).toBe(false)
 		expect(isRefreshing({ data: null, loading: true })).toBe(false)
-		expect(isRefreshing({ data: {}, loading: true })).toBe(false)
+		expect(isRefreshing({ data: emptyData, loading: true })).toBe(false)
 	})
 })

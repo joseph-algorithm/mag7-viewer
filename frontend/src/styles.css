@@ -434,3 +434,104 @@ body {
 		transition: none;
 	}
 }
+
+/* A data gap, not a failure: informational weight, distinct from .error-banner. */
+.unavailable-notice {
+	margin-bottom: 1rem;
+	padding: 0.6rem 0.9rem;
+	border: 1px solid var(--border);
+	border-left: 3px solid var(--axis);
+	border-radius: 8px;
+	background: var(--surface);
+	color: var(--muted);
+	font-size: 0.8125rem;
+}
+
+.unavailable-notice strong {
+	color: var(--text);
+	letter-spacing: 0.02em;
+}
+
+.unavailable-notice-lead {
+	text-transform: uppercase;
+	font-size: 0.6875rem;
+	letter-spacing: 0.04em;
+}
+
+.unavailable-notice ul {
+	margin: 0.25rem 0 0;
+	padding-left: 1rem;
+}
+
+.unavailable-notice li::marker {
+	color: var(--axis);
+}
+
+/*
+ * Recharts renders the brush with hardcoded white/grey presentation attributes,
+ * which glare against the dark surface. CSS wins over presentation attributes,
+ * so theming it here keeps the slider in the same palette as the chart: the
+ * unselected track recedes into the card, the selected window reads as the
+ * lighter "active" region, and the handles carry the only strong edge.
+ */
+/* The unselected track. Recharts leaves this rect unclassed, hence :not([class]). */
+.recharts-brush > rect:not([class]) {
+	fill: var(--grid);
+	fill-opacity: 1;
+	stroke: var(--border);
+}
+
+/* The selected window, which must read as lighter than the track around it. */
+.recharts-brush > rect.recharts-brush-slide {
+	fill: var(--axis);
+	fill-opacity: 0.35;
+	stroke: none;
+}
+
+.recharts-brush-traveller rect {
+	fill: var(--muted);
+	stroke: var(--surface);
+	stroke-width: 1;
+	rx: 2;
+}
+
+.recharts-brush-traveller:hover rect {
+	fill: var(--text);
+}
+
+/* The grip lines inside each handle. */
+.recharts-brush-traveller line {
+	stroke: var(--surface);
+	stroke-opacity: 0.9;
+}
+
+.recharts-brush-texts text,
+.recharts-brush text {
+	fill: var(--muted);
+	font-size: 10px;
+}
+
+/*
+ * Tooltip: fixed geometry, no transition.
+ *
+ * Recharts puts `transition: all` on the wrapper, so the panel glides toward
+ * the cursor instead of tracking it — that gliding is most of the "dancing".
+ * The fixed width matters too: the panel is positioned from a known width, so
+ * letting it resize with its own content would reintroduce a moving edge.
+ */
+.recharts-tooltip-wrapper {
+	transition: none !important;
+	pointer-events: none;
+}
+
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+	box-sizing: border-box;
+	width: 118px;
+	border: 1px solid var(--border) !important;
+	border-radius: 6px;
+	background: var(--surface) !important;
+}
+
+.recharts-tooltip-wrapper .recharts-tooltip-label {
+	color: var(--muted);
+}

@@ -1,4 +1,4 @@
-import type { ReturnsBySymbol } from './types'
+import type { ReturnsResponse } from './types'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
@@ -21,7 +21,7 @@ export async function fetchReturns(
 	start: string,
 	end: string,
 	signal?: AbortSignal,
-): Promise<ReturnsBySymbol> {
+): Promise<ReturnsResponse> {
 	const query = new URLSearchParams({ start, end })
 
 	let response: Response
@@ -36,7 +36,7 @@ export async function fetchReturns(
 		throw new ApiError(await readErrorDetail(response), response.status)
 	}
 
-	return (await response.json()) as ReturnsBySymbol
+	return (await response.json()) as ReturnsResponse
 }
 
 async function readErrorDetail(response: Response): Promise<string> {

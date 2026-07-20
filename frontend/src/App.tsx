@@ -6,6 +6,7 @@ import { LoadingIndicator } from './components/LoadingIndicator'
 import { SkeletonGrid } from './components/SkeletonGrid'
 import { SummaryTable } from './components/SummaryTable'
 import { TickerCard } from './components/TickerCard'
+import { UnavailableNotice } from './components/UnavailableNotice'
 import { useReturns } from './hooks/useReturns'
 import { computeAllStats } from './lib/stats'
 import { isRefreshing, viewState } from './lib/viewState'
@@ -22,8 +23,9 @@ export default function App() {
 	const [range, setRange] = useState(defaultRange)
 	const { data, loading, error, retry } = useReturns(range.start, range.end)
 
-	const stats = useMemo(() => (data ? computeAllStats(data) : []), [data])
-	const symbols = data ? Object.keys(data) : []
+	const stats = useMemo(() => (data ? computeAllStats(data.data) : []), [data])
+	const symbols = data ? Object.keys(data.data) : []
+	const unavailable = data?.unavailable ?? []
 	const view = viewState({ data, loading, error })
 	const refreshing = isRefreshing({ data, loading })
 
@@ -48,11 +50,13 @@ export default function App() {
 
 			{view === 'empty' && <p className="status">No symbols returned for this range.</p>}
 
+			{unavailable.length > 0 && <UnavailableNotice symbols={unavailable} />}
+
 			{view === 'grid' && data && (
 				<div className="results" aria-busy={refreshing} data-refreshing={refreshing || undefined}>
 					<div className="grid">
 						{symbols.map((symbol) => (
-							<TickerCard key={symbol} symbol={symbol} points={data[symbol]} />
+							<TickerCard key={symbol} symbol={symbol} points={data.data[symbol]} />
 						))}
 					</div>
 					<SummaryTable stats={stats} />

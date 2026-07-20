@@ -4,8 +4,25 @@ export interface ReturnPoint {
 	return: number
 }
 
-/** The `/returns` payload: symbol -> ordered daily series. */
+/** Symbol -> ordered daily series. */
 export type ReturnsBySymbol = Record<string, ReturnPoint[]>
+
+/** A requested symbol that produced no usable series, and why. */
+export interface UnavailableSymbol {
+	symbol: string
+	reason: string
+}
+
+/**
+ * The `/returns` payload.
+ *
+ * `unavailable` exists so a data gap is distinguishable from a shrunken
+ * universe — a symbol missing from `data` is always explained here.
+ */
+export interface ReturnsResponse {
+	data: ReturnsBySymbol
+	unavailable: UnavailableSymbol[]
+}
 
 /** Per-symbol descriptive statistics rendered in cards and the summary table. */
 export interface SymbolStats {

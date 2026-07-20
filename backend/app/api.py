@@ -28,8 +28,12 @@ def get_returns(
     start: Annotated[date, Query(description="Inclusive start date, YYYY-MM-DD")],
     end: Annotated[date, Query(description="Inclusive end date, YYYY-MM-DD")],
     service: Annotated[ReturnsService, Depends(get_service)],
-) -> dict[str, list[dict[str, Any]]]:
-    """Daily percentage returns per MAG7 symbol over the inclusive date range."""
+) -> dict[str, Any]:
+    """Daily percentage returns per MAG7 symbol over the inclusive date range.
+
+    Symbols with no usable series are reported in ``unavailable`` rather than
+    omitted, so the caller can tell a data gap from a shrunken universe.
+    """
     if start > end:
         raise HTTPException(status_code=400, detail="start must be on or before end")
     if (end - start).days > MAX_RANGE_DAYS:
@@ -39,13 +43,16 @@ def get_returns(
         )
 
     try:
-        records = service.get_returns(start, end)
+        payload = service.get_returns(start, end)
     except PriceFetchError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return {
-        symbol: [point.model_dump(by_alias=True) for point in points]
-        for symbol, points in records.items()
+        "data": {
+            symbol: [point.model_dump(by_alias=True) for point in points]
+            for symbol, points in payload.data.items()
+        },
+        "unavailable": [item.model_dump() for item in payload.unavailable],
     }
 
 

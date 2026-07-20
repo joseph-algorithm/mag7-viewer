@@ -69,4 +69,8 @@ def _extract_close(raw: pd.DataFrame, symbols: tuple[str, ...]) -> pd.DataFrame:
         close = raw[["Close"]].rename(columns={"Close": symbols[0]})
 
     present = [symbol for symbol in symbols if symbol in close.columns]
-    return close[present].dropna(axis=1, how="all")
+    usable = close[present].dropna(axis=1, how="all")
+    # Columns are dropped here when a symbol carries no prices at all. The caller
+    # reconciles that against the requested universe and reports the gap; it must
+    # never be inferred from absence alone.
+    return usable

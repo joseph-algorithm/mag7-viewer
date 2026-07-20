@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
 	Brush,
 	CartesianGrid,
@@ -14,6 +14,7 @@ import {
 
 import { clampRange, fullRange, isFullRange, resolveDragSelection } from '../lib/dragRange'
 import { computeStats, formatPercent } from '../lib/stats'
+import { TOOLTIP_Y, anchorX } from '../lib/tooltipAnchor'
 import type { ReturnPoint } from '../types'
 
 interface TickerCardProps {
@@ -24,6 +25,8 @@ interface TickerCardProps {
 /** Recharts hands mouse callbacks the active category label for the hovered point. */
 interface ChartMouseState {
 	activeLabel?: string | number
+	/** Cursor x within the chart container, in pixels. */
+	chartX?: number
 }
 
 function labelOf(state: ChartMouseState | null): string | null {
@@ -40,6 +43,8 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 	const [range, setRange] = useState(() => fullRange(points.length))
 	const [dragStart, setDragStart] = useState<string | null>(null)
 	const [dragEnd, setDragEnd] = useState<string | null>(null)
+	const chartRef = useRef<HTMLDivElement>(null)
+	const [cursorX, setCursorX] = useState<number | null>(null)
 
 	// A new date range replaces the series, so any existing zoom no longer applies.
 	useEffect(() => {
@@ -59,10 +64,36 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 	}
 
 	function extendDrag(state: ChartMouseState | null) {
+		if (typeof state?.chartX === 'number') setCursorX(state.chartX)
 		if (dragStart === null) return
 		const label = labelOf(state)
 		if (label !== null) setDragEnd(label)
 	}
+
+	/**
+	 * The last cursor x is deliberately retained. Clearing it would drop the
+	 * tooltip back to Recharts' default placement for the first frame of the
+	 * next hover, which shows up as a visible jump on re-entry.
+	 */
+	function leaveChart() {
+		commitDrag()
+	}
+
+	/**
+	 * Pin the tooltip relative to the cursor rather than to the active point, at a
+	 * constant vertical position. Recharts' own placement tracks the data point and
+	 * flips on its own, which reads as jitter.
+	 */
+	const tooltipPosition =
+		cursorX === null
+			? undefined
+			: {
+					x: anchorX({
+						cursorX,
+						containerWidth: chartRef.current?.clientWidth ?? 0,
+					}),
+					y: TOOLTIP_Y,
+				}
 
 	/**
 	 * Commit the drag. Because the brush is controlled by the same `range` state, the
@@ -106,7 +137,7 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 				</div>
 			</header>
 
-			<div className="card-chart">
+			<div className="card-chart" ref={chartRef}>
 				<ResponsiveContainer width="100%" height={180}>
 					<LineChart
 						data={points}
@@ -115,7 +146,7 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 						onMouseDown={beginDrag}
 						onMouseMove={extendDrag}
 						onMouseUp={commitDrag}
-						onMouseLeave={commitDrag}
+						onMouseLeave={leaveChart}
 					>
 						<CartesianGrid strokeDasharray="3 3" stroke="var(--grid)" />
 						<XAxis dataKey="date" tick={{ fontSize: 11 }} minTickGap={28} />
@@ -128,6 +159,11 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 							formatter={(value: number) => [formatPercent(value), 'Return']}
 							labelFormatter={(label: string) => label}
 							contentStyle={{ fontSize: 12 }}
+							position={tooltipPosition}
+							// The wrapper animates its transform by default, so the panel
+							// glides after the cursor instead of tracking it.
+							isAnimationActive={false}
+							allowEscapeViewBox={{ x: false, y: false }}
 						/>
 						<ReferenceLine y={0} stroke="var(--axis)" />
 						<Line

@@ -1,4 +1,4 @@
-import type { ReturnsBySymbol } from '../types'
+import type { ReturnsResponse } from '../types'
 
 /**
  * What the main region should render.
@@ -11,13 +11,13 @@ import type { ReturnsBySymbol } from '../types'
 export type ViewState = 'skeleton' | 'grid' | 'empty' | 'blank'
 
 export interface ViewStateInput {
-	data: ReturnsBySymbol | null
+	data: ReturnsResponse | null
 	loading: boolean
 	error: string | null
 }
 
 export function viewState({ data, loading, error }: ViewStateInput): ViewState {
-	const symbols = data ? Object.keys(data) : []
+	const symbols = data ? Object.keys(data.data) : []
 	if (symbols.length > 0) return 'grid'
 	if (loading) return 'skeleton'
 	if (error) return 'blank'
@@ -26,5 +26,5 @@ export function viewState({ data, loading, error }: ViewStateInput): ViewState {
 
 /** True while a refresh runs on top of data that is already on screen. */
 export function isRefreshing({ data, loading }: Pick<ViewStateInput, 'data' | 'loading'>): boolean {
-	return loading && data !== null && Object.keys(data).length > 0
+	return loading && data !== null && Object.keys(data.data).length > 0
 }

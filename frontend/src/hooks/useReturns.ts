@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 
 import { ApiError, fetchReturns } from '../api'
-import type { ReturnsBySymbol } from '../types'
+import type { ReturnsResponse } from '../types'
 
 export interface UseReturnsResult {
-	data: ReturnsBySymbol | null
+	data: ReturnsResponse | null
 	loading: boolean
 	error: string | null
 	/** Bump to re-run the request with the same range (used by the retry button). */
@@ -21,7 +21,7 @@ const DEBOUNCE_MS = 300
  * overwrite the data for the range the user is currently looking at.
  */
 export function useReturns(start: string, end: string): UseReturnsResult {
-	const [data, setData] = useState<ReturnsBySymbol | null>(null)
+	const [data, setData] = useState<ReturnsResponse | null>(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [attempt, setAttempt] = useState(0)

@@ -24,11 +24,33 @@ def test_returns_payload_matches_spec_shape(client: TestClient) -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert set(body) == set(MAG7)
-    assert body["MSFT"][0] == {"date": "2024-01-03", "return": 0.01}
+    assert set(body) == {"data", "unavailable"}
+    assert set(body["data"]) == set(MAG7)
+    assert body["unavailable"] == []
+    assert body["data"]["MSFT"][0] == {"date": "2024-01-03", "return": 0.01}
     assert all(
-        set(point) == {"date", "return"} for points in body.values() for point in points
+        set(point) == {"date", "return"}
+        for points in body["data"].values()
+        for point in points
     )
+
+
+def test_symbol_with_no_prices_is_reported_not_omitted(close_frame: pd.DataFrame) -> None:
+    """The regression this contract exists for: absence must never be silent."""
+    partial = close_frame.drop(columns=["MSFT"])
+    client = TestClient(
+        create_app(service=ReturnsService(fetch=lambda symbols, start, end: partial))
+    )
+
+    body = client.get(
+        "/returns", params={"start": "2024-01-02", "end": "2024-01-05"}
+    ).json()
+
+    assert "MSFT" not in body["data"]
+    assert [item["symbol"] for item in body["unavailable"]] == ["MSFT"]
+    assert body["unavailable"][0]["reason"]
+    # Every requested symbol is accounted for in exactly one of the two buckets.
+    assert set(body["data"]) | {item["symbol"] for item in body["unavailable"]} == set(MAG7)
 
 
 def test_malformed_date_is_rejected(client: TestClient) -> None:
