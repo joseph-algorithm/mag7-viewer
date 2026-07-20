@@ -221,8 +221,15 @@ body {
 	background: var(--surface);
 }
 
+/*
+ * Fixed layout + <colgroup> widths: column geometry is declared, not derived
+ * from cell content, so re-sorting never re-solves the layout. min-width keeps
+ * the columns legible on narrow viewports — .summary-scroll takes the overflow.
+ */
 .summary table {
 	width: 100%;
+	min-width: 680px;
+	table-layout: fixed;
 	border-collapse: collapse;
 	font-size: 0.875rem;
 }
@@ -233,6 +240,8 @@ body {
 	text-align: left;
 	border-bottom: 1px solid var(--border);
 	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .summary tbody tr:last-child th,
@@ -260,6 +269,18 @@ body {
 
 .summary thead button:hover {
 	color: var(--text);
+}
+
+/* Reserved regardless of sort state, so the arrow never adds or removes width. */
+.sort-arrow {
+	display: inline-block;
+	width: 0.75em;
+	margin-left: 0.25em;
+	text-align: left;
+}
+
+.summary thead th.numeric .sort-arrow {
+	text-align: right;
 }
 
 .summary .numeric {

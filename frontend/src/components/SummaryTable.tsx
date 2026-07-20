@@ -8,14 +8,30 @@ type SortKey = keyof Pick<
 	'symbol' | 'count' | 'min' | 'max' | 'mean' | 'cumulative' | 'volatility'
 >
 
-const COLUMNS: { key: SortKey; label: string; numeric: boolean }[] = [
-	{ key: 'symbol', label: 'Symbol', numeric: false },
-	{ key: 'count', label: 'Days', numeric: true },
-	{ key: 'mean', label: 'Mean', numeric: true },
-	{ key: 'min', label: 'Min', numeric: true },
-	{ key: 'max', label: 'Max', numeric: true },
-	{ key: 'volatility', label: 'Std dev', numeric: true },
-	{ key: 'cumulative', label: 'Cumulative', numeric: true },
+export interface SummaryColumn {
+	key: SortKey
+	label: string
+	numeric: boolean
+	/** Percentage of the table width. Drives <colgroup> under table-layout: fixed. */
+	width: number
+}
+
+/**
+ * Column widths are declared, not measured.
+ *
+ * With the browser's default auto table layout, widths are derived from cell
+ * content — so re-sorting (which moves the sort arrow to a different header)
+ * re-solved the layout and made the columns jump. Fixed widths make the grid
+ * stable across every sort key and direction.
+ */
+export const COLUMNS: SummaryColumn[] = [
+	{ key: 'symbol', label: 'Symbol', numeric: false, width: 14 },
+	{ key: 'count', label: 'Days', numeric: true, width: 10 },
+	{ key: 'mean', label: 'Mean', numeric: true, width: 14 },
+	{ key: 'min', label: 'Min', numeric: true, width: 14 },
+	{ key: 'max', label: 'Max', numeric: true, width: 14 },
+	{ key: 'volatility', label: 'Std dev', numeric: true, width: 14 },
+	{ key: 'cumulative', label: 'Cumulative', numeric: true, width: 20 },
 ]
 
 /** Cross-ticker performance table. Click a header to sort; click again to reverse. */
@@ -49,6 +65,11 @@ export function SummaryTable({ stats }: { stats: SymbolStats[] }) {
 			<h2>Summary</h2>
 			<div className="summary-scroll">
 				<table>
+					<colgroup>
+						{COLUMNS.map((column) => (
+							<col key={column.key} style={{ width: `${column.width}%` }} />
+						))}
+					</colgroup>
 					<thead>
 						<tr>
 							{COLUMNS.map((column) => (
@@ -66,7 +87,13 @@ export function SummaryTable({ stats }: { stats: SymbolStats[] }) {
 								>
 									<button type="button" onClick={() => toggleSort(column.key)}>
 										{column.label}
-										{sortKey === column.key ? (descending ? ' ↓' : ' ↑') : ''}
+										{/*
+										 * The arrow slot is always present, so moving the sort to
+										 * another column cannot change any header's width.
+										 */}
+										<span className="sort-arrow" aria-hidden="true">
+											{sortKey === column.key ? (descending ? '↓' : '↑') : ''}
+										</span>
 									</button>
 								</th>
 							))}
