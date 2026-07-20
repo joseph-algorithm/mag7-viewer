@@ -151,7 +151,9 @@ body {
 .reset-zoom {
 	position: absolute;
 	right: 0;
-	bottom: 1px;
+	/* `top` is set inline from the measured brush centre; this pulls the button
+	 * back by half its own height so that value is a true centre line. */
+	transform: translateY(-50%);
 	/*
 	 * Recharts' own wrapper is position: relative and comes later in the DOM, so
 	 * without a stacking order it paints over this button — the chart surface

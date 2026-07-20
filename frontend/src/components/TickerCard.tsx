@@ -63,6 +63,14 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 		null,
 	)
 	/**
+	 * Vertical centre of the brush band, relative to the chart container.
+	 *
+	 * The reset control aligns to this rather than to the container's bottom
+	 * edge: the labels row sits below the brush, so a bottom-anchored control
+	 * drifts down as soon as anything is added underneath.
+	 */
+	const [brushCenterY, setBrushCenterY] = useState<number | null>(null)
+	/**
 	 * Native pointer x at mousedown, for telling a zoom drag from a click.
 	 *
 	 * Deliberately taken from the DOM event on the container rather than from
@@ -111,6 +119,11 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 			}
 
 			const hostBox = host.getBoundingClientRect()
+			const brush = host.querySelector('.recharts-brush')
+			if (brush) {
+				const brushBox = brush.getBoundingClientRect()
+				setBrushCenterY(brushBox.top + brushBox.height / 2 - hostBox.top)
+			}
 			const [startBox, endBox] = [travellers[0], travellers[1]].map((node) =>
 				node.getBoundingClientRect(),
 			)
@@ -241,7 +254,9 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 				 * Overlaid rather than placed in flow, and the chart's right margin is a
 				 * constant, so the plot geometry does not change when the control appears.
 				 */}
-				{zoomed && <ResetZoomButton onClick={resetZoom} />}
+				{zoomed && brushCenterY !== null && (
+					<ResetZoomButton onClick={resetZoom} centerY={brushCenterY} />
+				)}
 				<ResponsiveContainer width="100%" height={180}>
 					<LineChart
 						data={points}

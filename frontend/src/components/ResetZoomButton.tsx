@@ -5,11 +5,19 @@
  * by proximity to the slider it resets. The accessible name stays on the
  * button, and `title` gives sighted users the same text on hover.
  */
-export function ResetZoomButton({ onClick }: { onClick: () => void }) {
+export function ResetZoomButton({
+	onClick,
+	centerY,
+}: {
+	onClick: () => void
+	/** Vertical centre to align to, relative to the chart container. */
+	centerY: number
+}) {
 	return (
 		<button
 			type="button"
 			className="reset-zoom"
+			style={{ top: centerY }}
 			onClick={onClick}
 			title="Reset zoom (or double-click the chart)"
 		>
