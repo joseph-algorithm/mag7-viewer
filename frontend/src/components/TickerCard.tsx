@@ -12,6 +12,7 @@ import {
 	YAxis,
 } from 'recharts'
 
+import { ResetZoomButton } from './ResetZoomButton'
 import { clampRange, fullRange, isFullRange, resolveDragSelection } from '../lib/dragRange'
 import { computeStats, formatPercent } from '../lib/stats'
 import { TOOLTIP_Y, anchorX } from '../lib/tooltipAnchor'
@@ -21,6 +22,14 @@ interface TickerCardProps {
 	symbol: string
 	points: ReturnPoint[]
 }
+
+/**
+ * Width reserved at the right edge for the reset-zoom control.
+ *
+ * Applied unconditionally so the plot and the brush keep the same geometry
+ * whether or not the control is currently shown.
+ */
+const RESET_GUTTER = 26
 
 /** Recharts hands mouse callbacks the active category label for the hovered point. */
 interface ChartMouseState {
@@ -126,11 +135,6 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 			<header className="card-header">
 				<h2>{symbol}</h2>
 				<div className="card-header-right">
-					{zoomed && (
-						<button type="button" className="reset-zoom" onClick={resetZoom}>
-							Reset zoom
-						</button>
-					)}
 					<span className={positive ? 'delta positive' : 'delta negative'}>
 						{formatPercent(stats.cumulative)}
 					</span>
@@ -138,10 +142,15 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 			</header>
 
 			<div className="card-chart" ref={chartRef}>
+				{/*
+				 * Overlaid rather than placed in flow, and the chart's right margin is a
+				 * constant, so the plot geometry does not change when the control appears.
+				 */}
+				{zoomed && <ResetZoomButton onClick={resetZoom} />}
 				<ResponsiveContainer width="100%" height={180}>
 					<LineChart
 						data={points}
-						margin={{ top: 4, right: 8, bottom: 0, left: -12 }}
+						margin={{ top: 4, right: RESET_GUTTER, bottom: 0, left: -12 }}
 						style={{ cursor: 'crosshair' }}
 						onMouseDown={beginDrag}
 						onMouseMove={extendDrag}

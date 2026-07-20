@@ -132,6 +132,7 @@ body {
 
 /* Dragging a range across the plot would otherwise select the axis labels as text. */
 .card-chart {
+	position: relative;
 	user-select: none;
 	-webkit-user-select: none;
 }
@@ -142,20 +143,41 @@ body {
 	gap: 0.5rem;
 }
 
+/*
+ * Sits in the gutter reserved by RESET_GUTTER, vertically centred on the brush
+ * band at the bottom of the chart — beside the slider it resets, not in the
+ * card header.
+ */
 .reset-zoom {
-	padding: 0.15rem 0.45rem;
+	position: absolute;
+	right: 0;
+	bottom: 1px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	padding: 0;
 	border: 1px solid var(--border);
 	border-radius: 5px;
-	background: transparent;
+	background: var(--surface);
 	color: var(--muted);
-	font: inherit;
-	font-size: 0.6875rem;
 	cursor: pointer;
+}
+
+.reset-zoom svg {
+	width: 12px;
+	height: 12px;
 }
 
 .reset-zoom:hover {
 	color: var(--text);
 	border-color: var(--axis);
+}
+
+.reset-zoom:focus-visible {
+	outline: 2px solid var(--axis);
+	outline-offset: 1px;
 }
 
 .delta {
