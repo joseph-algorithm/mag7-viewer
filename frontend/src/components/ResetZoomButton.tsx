@@ -7,7 +7,12 @@
  */
 export function ResetZoomButton({ onClick }: { onClick: () => void }) {
 	return (
-		<button type="button" className="reset-zoom" onClick={onClick} title="Reset zoom">
+		<button
+			type="button"
+			className="reset-zoom"
+			onClick={onClick}
+			title="Reset zoom (or double-click the chart)"
+		>
 			<span className="sr-only">Reset zoom</span>
 			<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
 				{/* Circular arrow: the conventional "restore to full range" mark. */}

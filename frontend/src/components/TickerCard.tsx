@@ -14,6 +14,7 @@ import {
 
 import { ResetZoomButton } from './ResetZoomButton'
 import { placeBrushLabels } from '../lib/brushLabels'
+import { isDragGesture } from '../lib/dragIntent'
 import { clampRange, fullRange, isFullRange, resolveDragSelection } from '../lib/dragRange'
 import { computeStats, formatPercent } from '../lib/stats'
 import { TOOLTIP_Y, anchorX } from '../lib/tooltipAnchor'
@@ -61,6 +62,17 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 	const [labelPlacement, setLabelPlacement] = useState<{ left: number; right: number } | null>(
 		null,
 	)
+	/**
+	 * Native pointer x at mousedown, for telling a zoom drag from a click.
+	 *
+	 * Deliberately taken from the DOM event on the container rather than from
+	 * Recharts' `chartX`: Recharts does not deliver onMouseMove while the button
+	 * is held, so a chartX-derived travel distance stays pinned at its press
+	 * value and the gesture always classifies as a click.
+	 */
+	const pressX = useRef<number | null>(null)
+	/** Whether the gesture that just finished was a drag; gates the reset. */
+	const lastGestureWasDrag = useRef(false)
 
 	// A new date range replaces the series, so any existing zoom no longer applies.
 	useEffect(() => {
@@ -83,11 +95,20 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 		const container = chartRef.current
 		if (!container) return
 
+		let frame = 0
+
 		function measure() {
 			const host = chartRef.current
 			if (!host) return
 			const travellers = host.querySelectorAll('.recharts-brush-traveller')
-			if (travellers.length < 2) return
+			if (travellers.length < 2) {
+				// ResponsiveContainer settles its width asynchronously, so the brush can
+				// render after this effect runs. Retry on the next frame rather than
+				// waiting for a resize that may never arrive — otherwise the labels are
+				// simply absent for the lifetime of the card.
+				frame = requestAnimationFrame(measure)
+				return
+			}
 
 			const hostBox = host.getBoundingClientRect()
 			const [startBox, endBox] = [travellers[0], travellers[1]].map((node) =>
@@ -106,7 +127,10 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 		measure()
 		const observer = new ResizeObserver(measure)
 		observer.observe(container)
-		return () => observer.disconnect()
+		return () => {
+			cancelAnimationFrame(frame)
+			observer.disconnect()
+		}
 	}, [visible.startIndex, visible.endIndex, points.length])
 
 	function beginDrag(state: ChartMouseState | null) {
@@ -163,6 +187,22 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 		setRange(fullRange(points.length))
 	}
 
+	/**
+	 * Double-click anywhere on the plot resets the zoom — the convention Plotly,
+	 * Highcharts, and TradingView share, so it is the gesture users try first.
+	 *
+	 * Gated on the preceding gesture: a drag-to-zoom whose endpoints land close
+	 * together would otherwise read as a double-click and immediately undo the
+	 * zoom the user just made.
+	 */
+	function handleDoubleClick() {
+		if (lastGestureWasDrag.current) {
+			lastGestureWasDrag.current = false
+			return
+		}
+		resetZoom()
+	}
+
 	if (points.length === 0) {
 		return (
 			<article className="card">
@@ -185,7 +225,18 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 				</div>
 			</header>
 
-			<div className="card-chart" ref={chartRef}>
+			<div
+				className="card-chart"
+				ref={chartRef}
+				onMouseDown={(event) => {
+					pressX.current = event.clientX
+				}}
+				onMouseUp={(event) => {
+					lastGestureWasDrag.current = isDragGesture(pressX.current, event.clientX)
+					pressX.current = null
+				}}
+				onDoubleClick={handleDoubleClick}
+			>
 				{/*
 				 * Overlaid rather than placed in flow, and the chart's right margin is a
 				 * constant, so the plot geometry does not change when the control appears.
