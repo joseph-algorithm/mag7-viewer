@@ -564,3 +564,32 @@ body {
 .recharts-tooltip-wrapper .recharts-tooltip-label {
 	color: var(--muted);
 }
+
+/*
+ * Brush date labels.
+ *
+ * Recharts draws its own on the slider row, where they crowd the handles and
+ * run under the reset control. Hidden here and re-rendered below the brush,
+ * where they have a row to themselves and cannot obscure the plot or the
+ * stats footer.
+ */
+.recharts-brush-texts {
+	display: none;
+}
+
+.brush-labels {
+	position: relative;
+	height: 1rem;
+	margin-top: 0.125rem;
+}
+
+.brush-label {
+	position: absolute;
+	top: 0;
+	width: 72px;
+	color: var(--muted);
+	font-size: 0.6875rem;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	white-space: nowrap;
+}

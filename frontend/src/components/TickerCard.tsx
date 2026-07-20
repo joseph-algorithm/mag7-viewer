@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
 	Brush,
 	CartesianGrid,
@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 
 import { ResetZoomButton } from './ResetZoomButton'
+import { placeBrushLabels } from '../lib/brushLabels'
 import { clampRange, fullRange, isFullRange, resolveDragSelection } from '../lib/dragRange'
 import { computeStats, formatPercent } from '../lib/stats'
 import { TOOLTIP_Y, anchorX } from '../lib/tooltipAnchor'
@@ -30,6 +31,9 @@ interface TickerCardProps {
  * whether or not the control is currently shown.
  */
 const RESET_GUTTER = 26
+
+/** Width of a `YYYY-MM-DD` label at the size the brush labels render. */
+const BRUSH_LABEL_WIDTH = 72
 
 /** Recharts hands mouse callbacks the active category label for the hovered point. */
 interface ChartMouseState {
@@ -54,6 +58,9 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 	const [dragEnd, setDragEnd] = useState<string | null>(null)
 	const chartRef = useRef<HTMLDivElement>(null)
 	const [cursorX, setCursorX] = useState<number | null>(null)
+	const [labelPlacement, setLabelPlacement] = useState<{ left: number; right: number } | null>(
+		null,
+	)
 
 	// A new date range replaces the series, so any existing zoom no longer applies.
 	useEffect(() => {
@@ -64,6 +71,43 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 
 	const visible = clampRange(range, points.length)
 	const zoomed = !isFullRange(visible, points.length)
+
+	/**
+	 * Measure the brush handles and place the labels under them.
+	 *
+	 * The handle positions come from the rendered SVG rather than being derived
+	 * from indices, so the labels stay correct regardless of the chart's internal
+	 * margins. Runs in a layout effect so the labels never paint at a stale spot.
+	 */
+	useLayoutEffect(() => {
+		const container = chartRef.current
+		if (!container) return
+
+		function measure() {
+			const host = chartRef.current
+			if (!host) return
+			const travellers = host.querySelectorAll('.recharts-brush-traveller')
+			if (travellers.length < 2) return
+
+			const hostBox = host.getBoundingClientRect()
+			const [startBox, endBox] = [travellers[0], travellers[1]].map((node) =>
+				node.getBoundingClientRect(),
+			)
+			setLabelPlacement(
+				placeBrushLabels({
+					startX: startBox.left + startBox.width / 2 - hostBox.left,
+					endX: endBox.left + endBox.width / 2 - hostBox.left,
+					labelWidth: BRUSH_LABEL_WIDTH,
+					containerWidth: hostBox.width,
+				}),
+			)
+		}
+
+		measure()
+		const observer = new ResizeObserver(measure)
+		observer.observe(container)
+		return () => observer.disconnect()
+	}, [visible.startIndex, visible.endIndex, points.length])
 
 	function beginDrag(state: ChartMouseState | null) {
 		const label = labelOf(state)
@@ -211,6 +255,22 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 						/>
 					</LineChart>
 				</ResponsiveContainer>
+
+				{/*
+				 * Rendered below the brush rather than on it. Recharts' own labels sit
+				 * inline on the slider row, where they crowd the handles and collide
+				 * with the reset control; those are hidden in CSS.
+				 */}
+				{labelPlacement && (
+					<div className="brush-labels">
+						<span className="brush-label" style={{ left: labelPlacement.left }}>
+							{labels[visible.startIndex]}
+						</span>
+						<span className="brush-label" style={{ left: labelPlacement.right }}>
+							{labels[visible.endIndex]}
+						</span>
+					</div>
+				)}
 			</div>
 
 			<dl className="card-stats">
