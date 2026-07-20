@@ -31,6 +31,20 @@ dates → 422.
 Caching is per-process, keyed by the exact `(start, end)` pair, 15-minute TTL,
 LRU eviction at 128 entries. A repeated range must not reach the provider.
 
+## Master range control
+
+A full-width slider under the header whose selected window **is** the fetched
+range, plus preset chips (`1M · 3M · 6M · YTD · 1Y · 5Y · Max`).
+
+| Rule | |
+|---|---|
+| Tier | Visually distinct from the per-card sliders — labelled, taller, year ticks, dates shown. A card slider zooms within loaded data; this one decides what is loaded |
+| Span | Reaches nine years back. Not ten: the API rejects ranges over `365 * 10` days and ten calendar years exceeds that |
+| Minimum window | Seven days, so every reachable slider position is a range the backend can serve — a two-day window landing on a weekend has no complete trading day |
+| Handles | Dragging one into the other pushes the other rather than stalling; the pair never inverts |
+| Active chip | Reflects the current range, and clears once the slider is dragged off a preset. No two presets may resolve to the same range |
+| Keyboard | Native range inputs, so arrows and Home/End work |
+
 ## Chart card
 
 One card per symbol in the `data` map. Each card shows a line chart, a range

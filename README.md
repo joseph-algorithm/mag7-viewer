@@ -26,6 +26,7 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 
 **Interface**
 
+- Master range slider and preset chips (`1M`…`Max`) driving what gets fetched
 - Date-range picker, debounced, with in-flight requests aborted on change
 - Sortable cross-ticker summary table with stable column widths
 - Data stays on screen during a refresh; an ambient spinner signals the fetch

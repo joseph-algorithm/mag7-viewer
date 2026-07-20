@@ -729,3 +729,155 @@ kbd {
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
 }
+
+/*
+ * Master range control.
+ *
+ * A different tier from the per-card sliders on purpose: full width, labelled,
+ * with year ticks and its dates shown. A card slider zooms within data already
+ * loaded; this one decides what gets loaded, and the two must not be mistaken
+ * for each other.
+ */
+.master-range {
+	margin-bottom: 1.5rem;
+	padding: 0.75rem 1rem 0.5rem;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: var(--surface);
+}
+
+.master-range-top {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin-bottom: 0.5rem;
+}
+
+.master-range-label {
+	font-size: 0.6875rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--muted);
+}
+
+.master-range-presets {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+
+.range-preset {
+	padding: 0.2rem 0.55rem;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--muted);
+	font: inherit;
+	font-size: 0.75rem;
+	cursor: pointer;
+}
+
+.range-preset:hover:not(:disabled) {
+	color: var(--text);
+	border-color: var(--axis);
+}
+
+.range-preset[aria-pressed='true'] {
+	color: var(--text);
+	border-color: var(--axis);
+	background: var(--grid);
+}
+
+.range-preset:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
+/* Taller than a card slider, so the tier difference reads at a glance. */
+.master-range-track {
+	position: relative;
+	height: 30px;
+	border-radius: 6px;
+	background: var(--grid);
+}
+
+.master-range-selected {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	background: var(--axis);
+	opacity: 0.35;
+	border-radius: 6px;
+	pointer-events: none;
+}
+
+.master-range-tick {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background: var(--border);
+	pointer-events: none;
+}
+
+.master-range-tick-label {
+	position: absolute;
+	top: 100%;
+	left: 2px;
+	font-size: 0.625rem;
+	color: var(--muted);
+	font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Two native inputs stacked over one track: keyboard support comes free.
+ * The tracks are transparent so the styled band shows through, and only the
+ * thumbs take pointer events so both handles stay grabbable.
+ */
+.master-range-input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	appearance: none;
+	background: transparent;
+	pointer-events: none;
+}
+
+.master-range-input::-webkit-slider-thumb {
+	appearance: none;
+	width: 10px;
+	height: 26px;
+	border: 1px solid var(--surface);
+	border-radius: 3px;
+	background: var(--muted);
+	cursor: col-resize;
+	pointer-events: auto;
+}
+
+.master-range-input::-moz-range-thumb {
+	width: 10px;
+	height: 26px;
+	border: 1px solid var(--surface);
+	border-radius: 3px;
+	background: var(--muted);
+	cursor: col-resize;
+	pointer-events: auto;
+}
+
+.master-range-input:focus-visible::-webkit-slider-thumb {
+	outline: 2px solid var(--axis);
+	outline-offset: 1px;
+}
+
+.master-range-dates {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 0.875rem;
+	font-size: 0.6875rem;
+	color: var(--muted);
+	font-variant-numeric: tabular-nums;
+}

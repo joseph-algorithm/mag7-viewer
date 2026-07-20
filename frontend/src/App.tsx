@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { DateRangePicker } from './components/DateRangePicker'
 import { ErrorBanner } from './components/ErrorBanner'
 import { LoadingIndicator } from './components/LoadingIndicator'
+import { MasterRangeSlider } from './components/MasterRangeSlider'
 import { ShortcutsDialog } from './components/ShortcutsDialog'
 import { SkeletonGrid } from './components/SkeletonGrid'
 import { SummaryTable } from './components/SummaryTable'
@@ -10,19 +11,22 @@ import { TickerCard } from './components/TickerCard'
 import { UnavailableNotice } from './components/UnavailableNotice'
 import { useReturns } from './hooks/useReturns'
 import { computeAllStats } from './lib/stats'
+import { presetRange } from './lib/dateRange'
 import { shouldCloseHelp, shouldOpenHelp } from './lib/helpKey'
 import { isRefreshing, viewState } from './lib/viewState'
 
+function todayIso(): string {
+	return new Date().toISOString().slice(0, 10)
+}
+
 /** Default window: the trailing 6 months, which covers ~125 trading days. */
 function defaultRange(): { start: string; end: string } {
-	const end = new Date()
-	const start = new Date(end)
-	start.setMonth(start.getMonth() - 6)
-	return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) }
+	return presetRange('6M', todayIso())
 }
 
 export default function App() {
 	const [range, setRange] = useState(defaultRange)
+	const [today] = useState(todayIso)
 	const { data, loading, error, retry } = useReturns(range.start, range.end)
 
 	const stats = useMemo(() => (data ? computeAllStats(data.data) : []), [data])
@@ -73,6 +77,14 @@ export default function App() {
 					disabled={loading}
 				/>
 			</header>
+
+			<MasterRangeSlider
+				start={range.start}
+				end={range.end}
+				today={today}
+				disabled={loading}
+				onChange={setRange}
+			/>
 
 			{error && <ErrorBanner message={error} onRetry={retry} />}
 
