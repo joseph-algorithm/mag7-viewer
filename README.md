@@ -3,11 +3,32 @@
 A full-stack app for exploring daily percentage returns of the MAG7 stocks
 (MSFT, AAPL, GOOGL, AMZN, NVDA, META, TSLA).
 
-- **Backend** — FastAPI + pandas + yfinance, exposing `/returns?start=&end=` with an
-  in-memory TTL cache.
-- **Frontend** — React 18 + TypeScript + Recharts, rendering a responsive grid with one
-  interactive chart per ticker, a date-range picker, per-ticker summary stats, and a
-  sortable cross-ticker summary table.
+FastAPI + pandas + yfinance on the back end, React 18 + TypeScript + Recharts on the front.
+
+## Features
+
+**Charts**
+
+- One interactive line chart per ticker, in a responsive grid
+- Drag across a chart to zoom; double-click it or hit the reset icon to restore
+- Range slider under each chart, synced with the chart's zoom — drag it to select a
+  range, or drag the selected window to pan
+- Tooltip pinned at a fixed offset from the cursor, so it does not jitter
+- Min, max, mean and cumulative return per ticker
+
+**Data**
+
+- Daily returns for all seven tickers over a chosen date range (up to 10 years)
+- Symbols with no usable data are reported with a reason, never silently dropped
+- In-memory TTL cache, so a repeated range costs no upstream request
+
+**Interface**
+
+- Date-range picker, debounced, with in-flight requests aborted on change
+- Sortable cross-ticker summary table with stable column widths
+- Data stays on screen during a refresh; an ambient spinner signals the fetch
+- Error banner with retry
+- Light and dark themes, keyboard navigation, and screen-reader labels
 
 ## Requirements
 
@@ -96,6 +117,7 @@ The backend is split so each concern is independently testable:
 | `service.py` | Composes fetch → compute → cache                               |
 | `api.py`     | HTTP surface: validation and error mapping                     |
 | `main.py`    | App factory, CORS, configuration                               |
+| `models.py`  | Typed payload shapes and the `MAG7` symbol universe            |
 
 `create_app(service=...)` accepts an injected service, and `ReturnsService(fetch=...)`
 accepts an injected fetcher, so the whole suite runs without network access.
@@ -111,10 +133,12 @@ cd backend  && .venv/bin/python -m pytest && .venv/bin/python -m mypy
 cd frontend && npm test && npm run typecheck
 ```
 
-29 backend tests cover the return math (including NaN gaps, rounding, and unsorted
-input), cache TTL/LRU behavior, service caching and error propagation, yfinance response
-normalization, and every endpoint status path. 9 frontend tests cover the statistics
-helpers. The backend is fully type-annotated and passes `mypy` with
+33 backend tests cover the return math (including NaN gaps, rounding, and unsorted
+input), cache TTL/LRU behavior, service caching and error propagation, unavailable-symbol
+reporting, yfinance response normalization, and every endpoint status path. 66 frontend
+tests cover the statistics helpers and the interaction geometry — zoom range resolution,
+tooltip anchoring, brush label placement, drag-vs-click classification, and track
+selection. The backend is fully type-annotated and passes `mypy` with
 `disallow_untyped_defs`.
 
 ## Configuration
