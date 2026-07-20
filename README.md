@@ -60,10 +60,19 @@ Daily fractional returns per symbol over the inclusive range:
 
 ```json
 {
-  "MSFT": [{ "date": "2024-05-02", "return": 0.007343 }],
-  "AAPL": [{ "date": "2024-05-02", "return": 0.002381 }]
+  "data": {
+    "MSFT": [{ "date": "2024-05-02", "return": 0.007343 }],
+    "AAPL": [{ "date": "2024-05-02", "return": 0.002381 }]
+  },
+  "unavailable": [
+    { "symbol": "TSLA", "reason": "no data returned by the price provider for this range" }
+  ]
 }
 ```
+
+Every requested symbol appears in exactly one of `data` or `unavailable`. A symbol
+with no usable series is reported with a reason rather than omitted, so a caller can
+tell a data gap from a smaller universe — absence alone carries no information.
 
 | Status | Meaning                                                   |
 | ------ | --------------------------------------------------------- |
