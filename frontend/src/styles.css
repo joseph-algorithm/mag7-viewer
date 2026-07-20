@@ -152,6 +152,13 @@ body {
 	position: absolute;
 	right: 0;
 	bottom: 1px;
+	/*
+	 * Recharts' own wrapper is position: relative and comes later in the DOM, so
+	 * without a stacking order it paints over this button — the chart surface
+	 * then swallows the click and shows its crosshair cursor.
+	 */
+	z-index: 3;
+	cursor: pointer;
 	display: flex;
 	align-items: center;
 	justify-content: center;
