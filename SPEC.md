@@ -100,3 +100,7 @@ never leave the container**, at any handle position.
 - The loading indicator is a live region, replacing the announcement the old
   inline text provided.
 - `prefers-reduced-motion` disables the skeleton pulse and slows the spinner.
+- `?` opens a keyboard/mouse overlay; `Esc` closes it. `?` must not be stolen
+  from an editable field. Focus moves into the overlay on open and returns to
+  the opener on close. The mouse gestures are conventional but invisible, so
+  the overlay is the only place they are announced.

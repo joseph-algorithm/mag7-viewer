@@ -30,7 +30,7 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 - Sortable cross-ticker summary table with stable column widths
 - Data stays on screen during a refresh; an ambient spinner signals the fetch
 - Error banner with retry
-- Light and dark themes, keyboard navigation, and screen-reader labels
+- Light and dark themes, screen-reader labels, and `?` for a keyboard/mouse cheatsheet
 
 ## Requirements
 
