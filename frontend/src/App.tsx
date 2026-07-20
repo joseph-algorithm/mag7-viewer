@@ -2,10 +2,13 @@ import { useMemo, useState } from 'react'
 
 import { DateRangePicker } from './components/DateRangePicker'
 import { ErrorBanner } from './components/ErrorBanner'
+import { LoadingIndicator } from './components/LoadingIndicator'
+import { SkeletonGrid } from './components/SkeletonGrid'
 import { SummaryTable } from './components/SummaryTable'
 import { TickerCard } from './components/TickerCard'
 import { useReturns } from './hooks/useReturns'
 import { computeAllStats } from './lib/stats'
+import { isRefreshing, viewState } from './lib/viewState'
 
 /** Default window: the trailing 6 months, which covers ~125 trading days. */
 function defaultRange(): { start: string; end: string } {
@@ -21,6 +24,8 @@ export default function App() {
 
 	const stats = useMemo(() => (data ? computeAllStats(data) : []), [data])
 	const symbols = data ? Object.keys(data) : []
+	const view = viewState({ data, loading, error })
+	const refreshing = isRefreshing({ data, loading })
 
 	return (
 		<div className="app">
@@ -39,22 +44,22 @@ export default function App() {
 
 			{error && <ErrorBanner message={error} onRetry={retry} />}
 
-			{loading && <p className="status">Loading returns…</p>}
+			{view === 'skeleton' && <SkeletonGrid />}
 
-			{!loading && !error && data && symbols.length === 0 && (
-				<p className="status">No symbols returned for this range.</p>
-			)}
+			{view === 'empty' && <p className="status">No symbols returned for this range.</p>}
 
-			{data && symbols.length > 0 && (
-				<>
+			{view === 'grid' && data && (
+				<div className="results" aria-busy={refreshing} data-refreshing={refreshing || undefined}>
 					<div className="grid">
 						{symbols.map((symbol) => (
 							<TickerCard key={symbol} symbol={symbol} points={data[symbol]} />
 						))}
 					</div>
 					<SummaryTable stats={stats} />
-				</>
+				</div>
 			)}
+
+			{loading && <LoadingIndicator label={refreshing ? 'Updating returns' : 'Loading returns'} />}
 		</div>
 	)
 }

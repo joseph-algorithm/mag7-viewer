@@ -300,3 +300,116 @@ body {
 	padding: 2rem 0;
 	text-align: center;
 }
+
+/*
+ * Ambient loading affordance.
+ *
+ * Fixed to the bottom edge of the viewport and out of the document flow, so a
+ * refresh cannot displace the grid. The visible data stays put and only dims
+ * slightly, which is what a trader reading a chart expects during a re-fetch.
+ */
+.loading-indicator {
+	position: fixed;
+	right: 1.25rem;
+	bottom: 1.25rem;
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.4rem 0.7rem;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--surface);
+	box-shadow: 0 2px 10px rgb(0 0 0 / 12%);
+	color: var(--muted);
+	font-size: 0.75rem;
+	pointer-events: none;
+}
+
+.loading-indicator-label {
+	letter-spacing: 0.01em;
+}
+
+.spinner {
+	width: 0.875rem;
+	height: 0.875rem;
+	border: 2px solid var(--border);
+	border-top-color: var(--axis);
+	border-radius: 50%;
+	animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* Refreshing over existing data: recede, never move. */
+.results[data-refreshing] {
+	opacity: 0.65;
+	transition: opacity 150ms ease-out;
+}
+
+/* First-load placeholders hold the grid's final geometry. */
+.card-skeleton .card-header {
+	align-items: center;
+}
+
+.skeleton-bar {
+	display: block;
+	border-radius: 4px;
+	background: var(--grid);
+	animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-title {
+	width: 3.5rem;
+	height: 1rem;
+}
+
+.skeleton-badge {
+	width: 3rem;
+	height: 0.75rem;
+}
+
+.skeleton-chart {
+	height: 180px;
+	margin-top: 0.5rem;
+	border-radius: 6px;
+	background: var(--grid);
+	animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-stat-label {
+	width: 2rem;
+	height: 0.6875rem;
+	margin: 0 auto;
+}
+
+.skeleton-stat-value {
+	width: 2.75rem;
+	height: 0.875rem;
+	margin: 0.125rem auto 0;
+}
+
+@keyframes skeleton-pulse {
+	50% {
+		opacity: 0.45;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.spinner {
+		animation-duration: 2s;
+	}
+
+	.skeleton-bar,
+	.skeleton-chart {
+		animation: none;
+	}
+
+	.results[data-refreshing] {
+		transition: none;
+	}
+}
