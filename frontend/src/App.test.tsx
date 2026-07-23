@@ -16,14 +16,13 @@ vi.mock('./hooks/useReturns', () => ({
 }))
 
 describe('App date range controls', () => {
-  it('keeps controls enabled and hides stale results while a request is loading', () => {
+	it('keeps controls and existing results visible while a request is loading', () => {
 		const markup = renderToStaticMarkup(<App />)
 
 		expect(markup).toContain('aria-label="Range start"')
-    expect(markup).toContain('id="start-date"')
-    expect(markup).not.toContain('disabled=""')
-    expect(markup).toContain('class="results"')
-    expect(markup).toContain('aria-hidden="true"')
-    expect(markup).toContain('data-refreshing="true"')
-  })
+		expect(markup).toContain('id="start-date"')
+		expect(markup).not.toContain('disabled=""')
+		expect(markup).toContain('<div class="results" aria-busy="true">')
+		expect(markup).not.toContain('data-refreshing')
+	})
 })

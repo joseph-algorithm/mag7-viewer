@@ -397,11 +397,6 @@ body {
 	}
 }
 
-/* Preserve the grid's geometry during refresh without flashing stale graphs. */
-.results[data-refreshing] {
-	visibility: hidden;
-}
-
 /* First-load placeholders hold the grid's final geometry. */
 .card-skeleton .card-header {
 	align-items: center;

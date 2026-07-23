@@ -87,8 +87,12 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 	/** Whether the gesture that just finished was a drag; gates the reset. */
 	const lastGestureWasDrag = useRef(false)
 
-	// A new date range replaces the series, so any existing zoom no longer applies.
-	useEffect(() => {
+	/*
+	 * A new date range replaces the series, so any existing zoom no longer
+	 * applies. This must run before paint: a passive effect briefly renders the
+	 * new series through the old range indices, then snaps to the full range.
+	 */
+	useLayoutEffect(() => {
 		setRange(fullRange(points.length))
 		setDragStart(null)
 		setDragEnd(null)

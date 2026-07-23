@@ -106,7 +106,7 @@ never leave the container**, at any handle position.
 | State | Behaviour |
 |---|---|
 | First load | Skeleton cards holding the grid's final geometry — no reflow when data lands |
-| Refresh | The stale grid stays mounted to preserve geometry but is visually and accessibly hidden; only the final matching response is revealed |
+| Refresh | The existing grid stays visible and stable while the final committed range loads. When that response arrives, each card resets its local zoom before paint, so there is no hidden/empty interval or intermediate old-range graph frame |
 | Any fetch in flight | Ambient spinner fixed to the viewport edge, out of document flow |
 | Range change | The master slider fetches only after commit; committed changes are debounced and in-flight requests are aborted so a slow reply cannot overwrite a newer range |
 | Error | Banner with a retry control; the backend's message is shown verbatim, as it is written for users |
