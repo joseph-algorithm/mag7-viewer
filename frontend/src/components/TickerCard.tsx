@@ -55,6 +55,15 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 	const positive = stats.cumulative >= 0
 
 	const labels = useMemo(() => points.map((point) => point.date), [points])
+	// const pointsWithCompounded = points
+	const pointsWithCompounded = useMemo(() => {
+		let compoundedReturn = 1.0
+		for (let point of points) {
+			compoundedReturn *= 1 + point.return;
+			point.compoundedReturn = compoundedReturn - 1.0
+		}
+		return points;
+	}, [points])
 	const [range, setRange] = useState(() => fullRange(points.length))
 	const [dragStart, setDragStart] = useState<string | null>(null)
 	const [dragEnd, setDragEnd] = useState<string | null>(null)
@@ -351,7 +360,7 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 				)}
 				<ResponsiveContainer width="100%" height={180}>
 					<LineChart
-						data={points}
+						data={pointsWithCompounded}
 						margin={{ top: 4, right: RESET_GUTTER, bottom: 0, left: -12 }}
 						style={{ cursor: 'crosshair' }}
 						onMouseDown={beginDrag}
@@ -382,6 +391,14 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 							dataKey="return"
 							stroke={positive ? 'var(--up)' : 'var(--down)'}
 							strokeWidth={1.6}
+							dot={false}
+							isAnimationActive={false}
+						/>
+						<Line
+							type="monotone"
+							dataKey="compoundedReturn"
+							stroke={positive ? 'var(--up)' : 'var(--down)'}
+							strokeWidth={0.4}
 							dot={false}
 							isAnimationActive={false}
 						/>

@@ -2,6 +2,7 @@
 export interface ReturnPoint {
 	date: string
 	return: number
+	compoundedReturn?: number
 }
 
 /** Symbol -> ordered daily series. */
