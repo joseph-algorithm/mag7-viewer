@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useReducer, useState } from 'react'
 
 import { DateRangePicker } from './components/DateRangePicker'
 import { ErrorBanner } from './components/ErrorBanner'
@@ -13,6 +13,11 @@ import { useReturns } from './hooks/useReturns'
 import { computeAllStats } from './lib/stats'
 import { presetRange } from './lib/dateRange'
 import { shouldCloseHelp, shouldOpenHelp } from './lib/helpKey'
+import {
+  createRangeSelection,
+  type DateRange,
+  rangeSelectionReducer,
+} from './lib/rangeSelection'
 import { isRefreshing, viewState } from './lib/viewState'
 
 function todayIso(): string {
@@ -20,14 +25,21 @@ function todayIso(): string {
 }
 
 /** Default window: the trailing 6 months, which covers ~125 trading days. */
-function defaultRange(): { start: string; end: string } {
-	return presetRange('6M', todayIso())
+function defaultRange(): DateRange {
+  return presetRange('6M', todayIso())
 }
 
 export default function App() {
-	const [range, setRange] = useState(defaultRange)
-	const [today] = useState(todayIso)
-	const { data, loading, error, retry } = useReturns(range.start, range.end)
+  const [ranges, dispatchRange] = useReducer(
+    rangeSelectionReducer,
+    defaultRange(),
+    createRangeSelection,
+  )
+  const [today] = useState(todayIso)
+  const { data, loading, error, retry } = useReturns(
+    ranges.committed.start,
+    ranges.committed.end,
+  )
 
 	const stats = useMemo(() => (data ? computeAllStats(data.data) : []), [data])
 	const symbols = data ? Object.keys(data.data) : []
@@ -55,10 +67,18 @@ export default function App() {
 		window.addEventListener('keydown', onKeyDown)
 		return () => window.removeEventListener('keydown', onKeyDown)
 	}, [])
-	const view = viewState({ data, loading, error })
-	const refreshing = isRefreshing({ data, loading })
+  const view = viewState({ data, loading, error })
+  const refreshing = isRefreshing({ data, loading })
 
-	return (
+  function previewRange(range: DateRange) {
+    dispatchRange({ type: 'preview', range })
+  }
+
+  function commitRange(range: DateRange) {
+    dispatchRange({ type: 'commit', range })
+  }
+
+  return (
 		<div className="app">
 			<header className="app-header">
 				<div>
@@ -69,22 +89,21 @@ export default function App() {
 							press <kbd>?</kbd> for shortcuts
 						</button>
 					</p>
-				</div>
-				<DateRangePicker
-					start={range.start}
-					end={range.end}
-					onChange={setRange}
-					disabled={loading}
-				/>
+      </div>
+      <DateRangePicker
+        start={ranges.draft.start}
+        end={ranges.draft.end}
+        onChange={commitRange}
+      />
 			</header>
 
-			<MasterRangeSlider
-				start={range.start}
-				end={range.end}
-				today={today}
-				disabled={loading}
-				onChange={setRange}
-			/>
+    <MasterRangeSlider
+      start={ranges.draft.start}
+      end={ranges.draft.end}
+      today={today}
+      onChange={previewRange}
+      onCommit={commitRange}
+    />
 
 			{error && <ErrorBanner message={error} onRetry={retry} />}
 

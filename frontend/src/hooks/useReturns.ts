@@ -11,7 +11,7 @@ export interface UseReturnsResult {
 	retry: () => void
 }
 
-/** Debounce so dragging through dates in the picker issues one request, not ten. */
+/** Debounce rapid committed changes such as repeated keyboard adjustments. */
 const DEBOUNCE_MS = 300
 
 /**

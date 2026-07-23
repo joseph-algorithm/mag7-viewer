@@ -27,8 +27,8 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 
 **Interface**
 
-- Master range slider and preset chips (`1M`…`Max`) driving what gets fetched
-- Date-range picker, debounced, with in-flight requests aborted on change
+- Master range slider previews continuously, then fetches on release/keyboard commit; preset chips (`1M`…`Max`) and date fields commit immediately
+- Date controls stay interactive while committed requests are debounced; superseded in-flight requests are aborted
 - Sortable cross-ticker summary table with stable column widths
 - Data stays on screen during a refresh; an ambient spinner signals the fetch
 - Error banner with retry
@@ -140,10 +140,11 @@ cd frontend && npm test && npm run typecheck
 35 backend tests cover the return math (including NaN gaps, rounding, and unsorted
 input), cache TTL/LRU behavior, service caching and error propagation, unavailable-symbol
 reporting, async request concurrency, yfinance response normalization, and every endpoint
-status path. 93 frontend
+status path. 94 frontend
 tests cover the statistics helpers and the interaction geometry — zoom range resolution,
 tooltip anchoring, brush label placement, drag-vs-click classification, and track
-selection. The backend is fully type-annotated and passes `mypy` with
+selection — plus the loading-state contract for the date controls. The backend is fully
+type-annotated and passes `mypy` with
 `disallow_untyped_defs`.
 
 ## Configuration

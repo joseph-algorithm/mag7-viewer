@@ -7,16 +7,17 @@ import {
 	clampSpan,
 	daysBetween,
 	earliestDate,
-	matchingPreset,
-	presetRange,
+  matchingPreset,
+  presetRange,
 } from '../lib/dateRange'
+import type { DateRange } from '../lib/rangeSelection'
 
 interface MasterRangeSliderProps {
 	start: string
-	end: string
-	today: string
-	disabled?: boolean
-	onChange: (range: { start: string; end: string }) => void
+  end: string
+  today: string
+  onChange: (range: DateRange) => void
+  onCommit: (range: DateRange) => void
 }
 
 /** Year boundaries inside the slider's span, for the tick marks. */
@@ -46,9 +47,9 @@ function yearTicks(min: string, max: string): { label: string; percent: number }
 export function MasterRangeSlider({
 	start,
 	end,
-	today,
-	disabled,
-	onChange,
+  today,
+  onChange,
+  onCommit,
 }: MasterRangeSliderProps) {
 	const min = useMemo(() => earliestDate(today), [today])
 	const maxOffset = useMemo(() => daysBetween(min, today), [min, today])
@@ -58,16 +59,28 @@ export function MasterRangeSlider({
 	const active = matchingPreset({ start, end }, today)
 	const ticks = useMemo(() => yearTicks(min, today), [min, today])
 
-	function emit(nextStart: number, nextEnd: number, moved: 'start' | 'end') {
-		const clamped = clampSpan(nextStart, nextEnd, maxOffset, moved)
-		onChange({
-			start: addDays(min, clamped.startOffset),
-			end: addDays(min, clamped.endOffset),
-		})
-	}
+  function rangeFromOffsets(
+    nextStart: number,
+    nextEnd: number,
+    moved: 'start' | 'end',
+  ): DateRange {
+    const clamped = clampSpan(nextStart, nextEnd, maxOffset, moved)
+    return {
+      start: addDays(min, clamped.startOffset),
+      end: addDays(min, clamped.endOffset),
+    }
+  }
 
-	function applyPreset(preset: Preset) {
-		onChange(presetRange(preset, today))
+  function preview(nextStart: number, nextEnd: number, moved: 'start' | 'end') {
+    onChange(rangeFromOffsets(nextStart, nextEnd, moved))
+  }
+
+  function commit(nextStart: number, nextEnd: number, moved: 'start' | 'end') {
+    onCommit(rangeFromOffsets(nextStart, nextEnd, moved))
+  }
+
+  function applyPreset(preset: Preset) {
+    onCommit(presetRange(preset, today))
 	}
 
 	const selectedLeft = (startOffset / maxOffset) * 100
@@ -81,11 +94,10 @@ export function MasterRangeSlider({
 					{PRESETS.map((preset) => (
 						<button
 							key={preset}
-							type="button"
-							className="range-preset"
-							aria-pressed={active === preset}
-							disabled={disabled}
-							onClick={() => applyPreset(preset)}
+						type="button"
+						className="range-preset"
+						aria-pressed={active === preset}
+						onClick={() => applyPreset(preset)}
 						>
 							{preset}
 						</button>
@@ -109,22 +121,38 @@ export function MasterRangeSlider({
 					className="master-range-input"
 					min={0}
 					max={maxOffset}
-					value={startOffset}
-					disabled={disabled}
-					aria-label="Range start"
-					aria-valuetext={start}
-					onChange={(event) => emit(Number(event.target.value), endOffset, 'start')}
+      value={startOffset}
+      aria-label="Range start"
+      aria-valuetext={start}
+      onChange={(event) => preview(Number(event.target.value), endOffset, 'start')}
+      onPointerUp={(event) => commit(Number(event.currentTarget.value), endOffset, 'start')}
+      onPointerCancel={(event) =>
+        commit(Number(event.currentTarget.value), endOffset, 'start')
+      }
+      onLostPointerCapture={(event) =>
+        commit(Number(event.currentTarget.value), endOffset, 'start')
+      }
+      onKeyUp={(event) => commit(Number(event.currentTarget.value), endOffset, 'start')}
+      onBlur={(event) => commit(Number(event.currentTarget.value), endOffset, 'start')}
 				/>
 				<input
 					type="range"
 					className="master-range-input"
 					min={0}
 					max={maxOffset}
-					value={endOffset}
-					disabled={disabled}
-					aria-label="Range end"
-					aria-valuetext={end}
-					onChange={(event) => emit(startOffset, Number(event.target.value), 'end')}
+      value={endOffset}
+      aria-label="Range end"
+      aria-valuetext={end}
+      onChange={(event) => preview(startOffset, Number(event.target.value), 'end')}
+      onPointerUp={(event) => commit(startOffset, Number(event.currentTarget.value), 'end')}
+      onPointerCancel={(event) =>
+        commit(startOffset, Number(event.currentTarget.value), 'end')
+      }
+      onLostPointerCapture={(event) =>
+        commit(startOffset, Number(event.currentTarget.value), 'end')
+      }
+      onKeyUp={(event) => commit(startOffset, Number(event.currentTarget.value), 'end')}
+      onBlur={(event) => commit(startOffset, Number(event.currentTarget.value), 'end')}
 				/>
 			</div>
 

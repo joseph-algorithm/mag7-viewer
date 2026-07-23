@@ -48,6 +48,7 @@ range, plus preset chips (`1M · 3M · 6M · YTD · 1Y · 5Y · Max`).
 | Handles | Dragging one into the other pushes the other rather than stalling; the pair never inverts |
 | Active chip | Reflects the current range, and clears once the slider is dragged off a preset. No two presets may resolve to the same range |
 | Keyboard | Native range inputs, so arrows and Home/End work |
+| Requests | Slider movement previews the range locally without requesting. Pointer release/cancel/lost capture and keyboard keyup/blur commit it; presets and date fields commit immediately. Committed changes remain debounced, controls stay enabled, and superseded requests are aborted |
 
 ## Chart card
 
@@ -107,7 +108,7 @@ never leave the container**, at any handle position.
 | First load | Skeleton cards holding the grid's final geometry — no reflow when data lands |
 | Refresh | Existing data stays on screen and dims; the grid must not be displaced |
 | Any fetch in flight | Ambient spinner fixed to the viewport edge, out of document flow |
-| Range change | Debounced; in-flight requests aborted so a slow reply cannot overwrite a newer range |
+| Range change | The master slider fetches only after commit; committed changes are debounced and in-flight requests are aborted so a slow reply cannot overwrite a newer range |
 | Error | Banner with a retry control; the backend's message is shown verbatim, as it is written for users |
 | Unavailable symbols | Named in a notice, grouped by reason |
 

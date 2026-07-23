@@ -1,19 +1,20 @@
+import type { DateRange } from '../lib/rangeSelection'
+
 interface DateRangePickerProps {
-	start: string
-	end: string
-	onChange: (range: { start: string; end: string }) => void
-	disabled?: boolean
+  start: string
+  end: string
+  onChange: (range: DateRange) => void
 }
 
 /**
  * Native date inputs: keyboard accessible, localized by the browser, no dependency.
  * `max` on each input keeps the range ordered without needing an error state.
  */
-export function DateRangePicker({ start, end, onChange, disabled }: DateRangePickerProps) {
+export function DateRangePicker({ start, end, onChange }: DateRangePickerProps) {
 	const today = new Date().toISOString().slice(0, 10)
 
 	return (
-		<fieldset className="date-range" disabled={disabled}>
+		<fieldset className="date-range">
 			<legend className="sr-only">Date range</legend>
 
 			<label htmlFor="start-date">
