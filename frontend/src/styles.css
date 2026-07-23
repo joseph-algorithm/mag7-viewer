@@ -397,10 +397,9 @@ body {
 	}
 }
 
-/* Refreshing over existing data: recede, never move. */
+/* Preserve the grid's geometry during refresh without flashing stale graphs. */
 .results[data-refreshing] {
-	opacity: 0.65;
-	transition: opacity 150ms ease-out;
+	visibility: hidden;
 }
 
 /* First-load placeholders hold the grid's final geometry. */
@@ -461,9 +460,6 @@ body {
 		animation: none;
 	}
 
-	.results[data-refreshing] {
-		transition: none;
-	}
 }
 
 /* A data gap, not a failure: informational weight, distinct from .error-banner. */

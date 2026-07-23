@@ -30,7 +30,7 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 - Master range slider previews continuously, then fetches on release/keyboard commit; preset chips (`1M`…`Max`) and date fields commit immediately
 - Date controls stay interactive while committed requests are debounced; superseded in-flight requests are aborted
 - Sortable cross-ticker summary table with stable column widths
-- Data stays on screen during a refresh; an ambient spinner signals the fetch
+- The result grid keeps its geometry but hides stale graphs during refresh; an ambient spinner signals the fetch
 - Error banner with retry
 - Light and dark themes, screen-reader labels, and `?` for a keyboard/mouse cheatsheet
 

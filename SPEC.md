@@ -106,7 +106,7 @@ never leave the container**, at any handle position.
 | State | Behaviour |
 |---|---|
 | First load | Skeleton cards holding the grid's final geometry — no reflow when data lands |
-| Refresh | Existing data stays on screen and dims; the grid must not be displaced |
+| Refresh | The stale grid stays mounted to preserve geometry but is visually and accessibly hidden; only the final matching response is revealed |
 | Any fetch in flight | Ambient spinner fixed to the viewport edge, out of document flow |
 | Range change | The master slider fetches only after commit; committed changes are debounced and in-flight requests are aborted so a slow reply cannot overwrite a newer range |
 | Error | Banner with a retry control; the backend's message is shown verbatim, as it is written for users |

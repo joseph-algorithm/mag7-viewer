@@ -113,8 +113,13 @@ export default function App() {
 
 			{unavailable.length > 0 && <UnavailableNotice symbols={unavailable} />}
 
-			{view === 'grid' && data && (
-				<div className="results" aria-busy={refreshing} data-refreshing={refreshing || undefined}>
+    {view === 'grid' && data && (
+      <div
+        className="results"
+        aria-busy={refreshing}
+        aria-hidden={refreshing || undefined}
+        data-refreshing={refreshing || undefined}
+      >
 					<div className="grid">
 						{symbols.map((symbol) => (
 							<TickerCard key={symbol} symbol={symbol} points={data.data[symbol]} />
