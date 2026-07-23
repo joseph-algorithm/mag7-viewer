@@ -1,3 +1,4 @@
+import type { IndexRange } from './dragRange'
 import type { ReturnPoint, ReturnsBySymbol, SymbolStats } from '../types'
 
 /**
@@ -29,6 +30,19 @@ export function computeStats(symbol: string, points: ReturnPoint[]): SymbolStats
 		cumulative,
 		volatility: Math.sqrt(variance),
 	}
+}
+
+/**
+ * Stats over an inclusive index window of a series — the brush selection.
+ * Slices to [startIndex, endIndex] and defers to computeStats, so an empty
+ * or single-point window is handled identically to the full series.
+ */
+export function computeVisibleStats(
+	symbol: string,
+	points: ReturnPoint[],
+	{ startIndex, endIndex }: IndexRange,
+): SymbolStats {
+	return computeStats(symbol, points.slice(startIndex, endIndex + 1))
 }
 
 /** Stats for every symbol in the payload, in the payload's own key order. */

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ReturnPoint } from '../types'
-import { computeAllStats, computeStats, formatPercent } from './stats'
+import { computeAllStats, computeStats, computeVisibleStats, formatPercent } from './stats'
 
 const points: ReturnPoint[] = [
 	{ date: '2024-01-03', return: 0.01 },
@@ -47,6 +47,63 @@ describe('computeStats', () => {
 
 	it('reports zero spread for a single observation', () => {
 		expect(computeStats('MSFT', [{ date: '2024-01-03', return: 0.01 }]).volatility).toBe(0)
+	})
+})
+
+describe('computeVisibleStats', () => {
+	it('matches full-series stats when the window covers the whole series', () => {
+		const windowed = computeVisibleStats('MSFT', points, {
+			startIndex: 0,
+			endIndex: points.length - 1,
+		})
+
+		expect(windowed).toEqual(computeStats('MSFT', points))
+	})
+
+	it('includes both endpoints of a mid-series window', () => {
+		const windowed = computeVisibleStats('MSFT', points, { startIndex: 1, endIndex: 2 })
+
+		expect(windowed.count).toBe(2)
+		expect(windowed.min).toBe(-0.02)
+		expect(windowed.max).toBe(0.03)
+		expect(windowed.mean).toBeCloseTo(0.005, 10)
+	})
+
+	it('collapses a single-point window to that day', () => {
+		const windowed = computeVisibleStats('MSFT', points, { startIndex: 1, endIndex: 1 })
+
+		expect(windowed.count).toBe(1)
+		expect(windowed.min).toBe(-0.02)
+		expect(windowed.max).toBe(-0.02)
+		expect(windowed.mean).toBe(-0.02)
+		expect(windowed.volatility).toBe(0)
+	})
+
+	it('zeroes stats for a window over an empty series instead of producing NaN', () => {
+		const windowed = computeVisibleStats('MSFT', [], { startIndex: 0, endIndex: 0 })
+
+		expect(windowed).toEqual(computeStats('MSFT', []))
+		expect(Number.isNaN(windowed.mean)).toBe(false)
+	})
+
+	it('keeps min <= mean <= max and the inclusive count for every valid window', () => {
+		const series: ReturnPoint[] = Array.from({ length: 12 }, (_, day) => ({
+			date: `2024-02-${String(day + 1).padStart(2, '0')}`,
+			return: Math.sin(day * 1.7) / 25,
+		}))
+
+		for (let start = 0; start < series.length; start++) {
+			for (let end = start; end < series.length; end++) {
+				const windowed = computeVisibleStats('MSFT', series, {
+					startIndex: start,
+					endIndex: end,
+				})
+
+				expect(windowed.count).toBe(end - start + 1)
+				expect(windowed.min).toBeLessThanOrEqual(windowed.mean)
+				expect(windowed.mean).toBeLessThanOrEqual(windowed.max)
+			}
+		}
 	})
 })
 

@@ -17,7 +17,7 @@ import { placeBrushLabels } from '../lib/brushLabels'
 import { selectionFromDrag } from '../lib/brushSelect'
 import { isDragGesture } from '../lib/dragIntent'
 import { clampRange, fullRange, isFullRange, resolveDragSelection } from '../lib/dragRange'
-import { computeStats, formatPercent } from '../lib/stats'
+import { computeStats, computeVisibleStats, formatPercent } from '../lib/stats'
 import { TOOLTIP_Y, anchorX } from '../lib/tooltipAnchor'
 import type { ReturnPoint } from '../types'
 
@@ -101,6 +101,13 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 	const visible = clampRange(range, points.length)
 	const zoomed = !isFullRange(visible, points.length)
 	zoomedRef.current = zoomed
+
+	// Memoized against the window, not the render: cursor tracking re-renders
+	// the card on every mouse move while the window is unchanged.
+	const visibleStats = useMemo(
+		() => computeVisibleStats(symbol, points, visible),
+		[symbol, points, visible.startIndex, visible.endIndex],
+	)
 
 	/**
 	 * Drag-to-select across the brush track.
@@ -438,15 +445,15 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 			<dl className="card-stats">
 				<div>
 					<dt>Min</dt>
-					<dd className="negative">{formatPercent(stats.min)}</dd>
+					<dd className="negative">{formatPercent(visibleStats.min)}</dd>
 				</div>
 				<div>
 					<dt>Max</dt>
-					<dd className="positive">{formatPercent(stats.max)}</dd>
+					<dd className="positive">{formatPercent(visibleStats.max)}</dd>
 				</div>
 				<div>
 					<dt>Mean</dt>
-					<dd>{formatPercent(stats.mean)}</dd>
+					<dd>{formatPercent(visibleStats.mean)}</dd>
 				</div>
 			</dl>
 		</article>
