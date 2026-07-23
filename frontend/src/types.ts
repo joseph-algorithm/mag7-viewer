@@ -2,11 +2,18 @@
 export interface ReturnPoint {
 	date: string
 	return: number
-	compoundedReturn?: number
 }
 
 /** Symbol -> ordered daily series. */
 export type ReturnsBySymbol = Record<string, ReturnPoint[]>
+
+/** A return point enriched for chart rendering at the frontend state boundary. */
+export interface ChartReturnPoint extends ReturnPoint {
+	compoundedReturn: number
+}
+
+/** Symbol -> chart-ready daily and compounded return series. */
+export type ChartReturnsBySymbol = Record<string, ChartReturnPoint[]>
 
 /** A requested symbol that produced no usable series, and why. */
 export interface UnavailableSymbol {
@@ -22,6 +29,12 @@ export interface UnavailableSymbol {
  */
 export interface ReturnsResponse {
 	data: ReturnsBySymbol
+	unavailable: UnavailableSymbol[]
+}
+
+/** Frontend-owned return state after derived chart values have been added. */
+export interface ReturnsState {
+	data: ChartReturnsBySymbol
 	unavailable: UnavailableSymbol[]
 }
 

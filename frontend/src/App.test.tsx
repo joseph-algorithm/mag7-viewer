@@ -5,10 +5,10 @@ import App from './App'
 
 const { useReturns } = vi.hoisted(() => ({
   useReturns: vi.fn(() => ({
-    data: {
-      data: { MSFT: [{ date: '2024-01-03', return: 0.01 }] },
-      unavailable: [],
-    },
+		data: {
+			data: { MSFT: [{ date: '2024-01-03', return: 0.01, compoundedReturn: 0.01 }] },
+			unavailable: [],
+		},
     loading: true,
     error: null,
     retry: vi.fn(),

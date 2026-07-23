@@ -11,7 +11,7 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 
 **Charts**
 
-- One interactive line chart per ticker, in a responsive grid
+- Daily and running compounded return lines per ticker, in a responsive grid
 - Drag across a chart to zoom; double-click it or hit the reset icon to restore
 - Range slider under each chart, synced with the chart's zoom — drag it to select a
   range, or drag the selected window to pan
@@ -21,6 +21,7 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 **Data**
 
 - Daily returns for all seven tickers over a chosen date range (up to 10 years)
+- Compounded chart series are derived immutably once at the frontend data-state boundary
 - Symbols with no usable data are reported with a reason, never silently dropped
 - In-memory TTL cache, so a repeated range costs no upstream request
 - Async HTTP handlers offload the blocking provider pipeline to worker threads
@@ -141,11 +142,10 @@ cd frontend && npm test && npm run typecheck
 35 backend tests cover the return math (including NaN gaps, rounding, and unsorted
 input), cache TTL/LRU behavior, service caching and error propagation, unavailable-symbol
 reporting, async request concurrency, yfinance response normalization, and every endpoint
-status path. 94 frontend
-tests cover the statistics helpers and the interaction geometry — zoom range resolution,
-tooltip anchoring, brush label placement, drag-vs-click classification, and track
-selection — plus the loading-state contract for the date controls. The backend is fully
-type-annotated and passes `mypy` with
+status path. 118 frontend tests cover compounded-return state normalization, statistics
+helpers, and the interaction geometry — zoom range resolution, tooltip anchoring, brush
+label placement, drag-vs-click classification, and track selection — plus the loading-state
+contract for the date controls. The backend is fully type-annotated and passes `mypy` with
 `disallow_untyped_defs`.
 
 ## Configuration

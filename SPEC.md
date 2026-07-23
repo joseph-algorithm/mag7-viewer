@@ -53,9 +53,13 @@ range, plus preset chips (`1M · 3M · 6M · YTD · 1Y · 5Y · Max`).
 
 ## Chart card
 
-One card per symbol in the `data` map. Each card shows a line chart, a range
-slider beneath it, the selected range's dates, and min/max/mean plus cumulative
-return.
+One card per symbol in the `data` map. Each card shows daily and running
+compounded return lines, a range slider beneath them, the selected range's
+dates, and min/max/mean plus cumulative return.
+
+The frontend derives each running compounded series once when a successful API
+payload enters `useReturns` state. API response points remain immutable, and
+cards consume the chart-ready state without deriving or mutating shared data.
 
 ### Zoom
 

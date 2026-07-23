@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 
 import { ApiError, fetchReturns } from '../api'
-import type { ReturnsResponse } from '../types'
+import { createReturnsState } from '../lib/compoundedReturns'
+import type { ReturnsState } from '../types'
 
 export interface UseReturnsResult {
-	data: ReturnsResponse | null
+	data: ReturnsState | null
 	loading: boolean
 	error: string | null
 	/** Bump to re-run the request with the same range (used by the retry button). */
@@ -34,7 +35,7 @@ export function isReturnsRequestPending(
  * overwrite the data for the range the user is currently looking at.
  */
 export function useReturns(start: string, end: string): UseReturnsResult {
-	const [data, setData] = useState<ReturnsResponse | null>(null)
+	const [data, setData] = useState<ReturnsState | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
@@ -57,10 +58,10 @@ export function useReturns(start: string, end: string): UseReturnsResult {
 		setError(null)
 
 		const timer = setTimeout(() => {
-      fetchReturns(start, end, controller.signal)
-        .then((payload) => {
-          if (controller.signal.aborted) return
-          setData(payload)
+			fetchReturns(start, end, controller.signal)
+				.then((payload) => {
+					if (controller.signal.aborted) return
+					setData(createReturnsState(payload))
           setError(null)
           setResolvedRequestKey(requestKey)
         })

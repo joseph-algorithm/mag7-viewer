@@ -19,11 +19,11 @@ import { isDragGesture } from '../lib/dragIntent'
 import { clampRange, fullRange, isFullRange, resolveDragSelection } from '../lib/dragRange'
 import { computeStats, computeVisibleStats, formatPercent } from '../lib/stats'
 import { TOOLTIP_Y, anchorX } from '../lib/tooltipAnchor'
-import type { ReturnPoint } from '../types'
+import type { ChartReturnPoint } from '../types'
 
 interface TickerCardProps {
 	symbol: string
-	points: ReturnPoint[]
+	points: ChartReturnPoint[]
 }
 
 /**
@@ -55,15 +55,6 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 	const positive = stats.cumulative >= 0
 
 	const labels = useMemo(() => points.map((point) => point.date), [points])
-	// const pointsWithCompounded = points
-	const pointsWithCompounded = useMemo(() => {
-		let compoundedReturn = 1.0
-		for (let point of points) {
-			compoundedReturn *= 1 + point.return;
-			point.compoundedReturn = compoundedReturn - 1.0
-		}
-		return points;
-	}, [points])
 	const [range, setRange] = useState(() => fullRange(points.length))
 	const [dragStart, setDragStart] = useState<string | null>(null)
 	const [dragEnd, setDragEnd] = useState<string | null>(null)
@@ -360,7 +351,7 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 				)}
 				<ResponsiveContainer width="100%" height={180}>
 					<LineChart
-						data={pointsWithCompounded}
+						data={points}
 						margin={{ top: 4, right: RESET_GUTTER, bottom: 0, left: -12 }}
 						style={{ cursor: 'crosshair' }}
 						onMouseDown={beginDrag}
