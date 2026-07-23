@@ -29,6 +29,7 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 
 - Master range slider previews continuously, then fetches on release/keyboard commit; preset chips (`1M`…`Max`) and date fields commit immediately
 - Date controls stay interactive while committed requests are debounced; superseded in-flight requests are aborted
+- Committed ranges are mirrored to `start` and `end` URL parameters and restored on refresh, so a selected view is bookmarkable
 - Sortable cross-ticker summary table with stable column widths
 - Existing graphs stay visible during refresh; the final response swaps in with card zoom reset before paint, while an ambient spinner signals the fetch
 - Error banner with retry
@@ -175,7 +176,8 @@ type-annotated and passes `mypy` with
   compounded (`∏(1 + r) − 1`), not summed, and standard deviation is the sample
   (n−1) form.
 - **Ranges are capped at 10 years** as a guard against an accidental decades-long query.
-- **The default view is the trailing six months**, chosen to show enough points for the
-  charts to be interesting on first load.
+- **The default view is the trailing six months** when the URL has no complete valid
+`start`/`end` pair, chosen to show enough points for the charts to be interesting on
+first load.
 - **yfinance is unauthenticated** and rate-limits aggressively; the cache is the
   mitigation. Sustained production use would need a licensed data provider.

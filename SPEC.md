@@ -49,6 +49,7 @@ range, plus preset chips (`1M · 3M · 6M · YTD · 1Y · 5Y · Max`).
 | Active chip | Reflects the current range, and clears once the slider is dragged off a preset. No two presets may resolve to the same range |
 | Keyboard | Native range inputs, so arrows and Home/End work |
 | Requests | Slider movement previews the range locally without requesting. Pointer release/cancel/lost capture and keyboard keyup/blur commit it; presets and date fields commit immediately. Committed changes remain debounced, controls stay enabled, and superseded requests are aborted |
+| URL state | Every committed range replaces the current URL's `start` and `end` query parameters without adding browser-history entries. A refresh restores a complete, valid pair before the first request. Missing, malformed, future, inverted, or API-oversized pairs fall back to the trailing-six-month default; unrelated query parameters and the hash are preserved |
 
 ## Chart card
 

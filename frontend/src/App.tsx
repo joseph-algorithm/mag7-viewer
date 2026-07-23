@@ -18,6 +18,7 @@ import {
   type DateRange,
   rangeSelectionReducer,
 } from './lib/rangeSelection'
+import { rangeFromSearch, urlWithRange } from './lib/rangeUrl'
 import { isRefreshing, viewState } from './lib/viewState'
 
 function todayIso(): string {
@@ -25,17 +26,23 @@ function todayIso(): string {
 }
 
 /** Default window: the trailing 6 months, which covers ~125 trading days. */
-function defaultRange(): DateRange {
-  return presetRange('6M', todayIso())
+function defaultRange(today: string): DateRange {
+  return presetRange('6M', today)
+}
+
+function initialRange(today: string): DateRange {
+  const fallback = defaultRange(today)
+  if (typeof window === 'undefined') return fallback
+  return rangeFromSearch(window.location.search, today) ?? fallback
 }
 
 export default function App() {
+  const [today] = useState(todayIso)
   const [ranges, dispatchRange] = useReducer(
     rangeSelectionReducer,
-    defaultRange(),
-    createRangeSelection,
+    today,
+    (initialToday) => createRangeSelection(initialRange(initialToday)),
   )
-  const [today] = useState(todayIso)
   const { data, loading, error, retry } = useReturns(
     ranges.committed.start,
     ranges.committed.end,
@@ -46,8 +53,8 @@ export default function App() {
 	const unavailable = data?.unavailable ?? []
 	const [helpOpen, setHelpOpen] = useState(false)
 
-	useEffect(() => {
-		function onKeyDown(event: KeyboardEvent) {
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
 			const target = event.target as HTMLElement | null
 			const context = {
 				key: event.key,
@@ -65,8 +72,17 @@ export default function App() {
 			}
 		}
 		window.addEventListener('keydown', onKeyDown)
-		return () => window.removeEventListener('keydown', onKeyDown)
-	}, [])
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  useEffect(() => {
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    const nextUrl = urlWithRange(window.location, ranges.committed)
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(window.history.state, '', nextUrl)
+    }
+  }, [ranges.committed.end, ranges.committed.start])
+
   const view = viewState({ data, loading, error })
   const refreshing = isRefreshing({ data, loading })
 
