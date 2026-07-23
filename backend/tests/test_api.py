@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
+import inspect
+import threading
 from datetime import date
 
 import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient, Response
 
+from app.api import get_returns, get_service, get_symbols, health
 from app.fetcher import PriceFetchError
 from app.main import create_app
 from app.models import MAG7
@@ -88,3 +93,56 @@ def test_upstream_failure_maps_to_502_with_message() -> None:
 def test_symbols_and_health_endpoints(client: TestClient) -> None:
     assert client.get("/symbols").json() == {"symbols": list(MAG7)}
     assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_all_fastapi_handlers_and_dependencies_are_async() -> None:
+    assert inspect.iscoroutinefunction(get_service)
+    assert inspect.iscoroutinefunction(get_returns)
+    assert inspect.iscoroutinefunction(get_symbols)
+    assert inspect.iscoroutinefunction(health)
+
+
+def test_concurrent_returns_requests_offload_blocking_service_work(
+    close_frame: pd.DataFrame,
+) -> None:
+    second_request_entered_fetch = threading.Event()
+    call_lock = threading.Lock()
+    call_count = 0
+    requests_overlapped = False
+
+    def blocking_fetch(
+        symbols: tuple[str, ...], start: date, end: date
+    ) -> pd.DataFrame:
+        nonlocal call_count, requests_overlapped
+        with call_lock:
+            call_count += 1
+            call_number = call_count
+
+        if call_number == 1:
+            requests_overlapped = second_request_entered_fetch.wait(timeout=1)
+        else:
+            second_request_entered_fetch.set()
+        return close_frame
+
+    app = create_app(service=ReturnsService(fetch=blocking_fetch))
+
+    async def request_two_ranges() -> list[Response]:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(
+            transport=transport, base_url="http://testserver"
+        ) as client:
+            return await asyncio.gather(
+                client.get(
+                    "/returns",
+                    params={"start": "2024-01-02", "end": "2024-01-05"},
+                ),
+                client.get(
+                    "/returns",
+                    params={"start": "2024-01-02", "end": "2024-01-06"},
+                ),
+            )
+
+    responses = asyncio.run(request_two_ranges())
+
+    assert [response.status_code for response in responses] == [200, 200]
+    assert requests_overlapped

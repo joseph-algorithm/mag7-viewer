@@ -31,6 +31,10 @@ dates → 422.
 Caching is per-process, keyed by the exact `(start, end)` pair, 15-minute TTL,
 LRU eviction at 128 entries. A repeated range must not reach the provider.
 
+HTTP handlers are async. The synchronous provider and pandas pipeline runs in a
+worker thread so one slow price request does not block the server event loop
+from accepting and advancing other requests.
+
 ## Master range control
 
 A full-width slider under the header whose selected window **is** the fetched

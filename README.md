@@ -23,6 +23,7 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 - Daily returns for all seven tickers over a chosen date range (up to 10 years)
 - Symbols with no usable data are reported with a reason, never silently dropped
 - In-memory TTL cache, so a repeated range costs no upstream request
+- Async HTTP handlers offload the blocking provider pipeline to worker threads
 
 **Interface**
 
@@ -118,7 +119,7 @@ The backend is split so each concern is independently testable:
 | `returns.py` | Pure pandas transforms from close prices to return records     |
 | `cache.py`   | Generic thread-safe TTL + LRU cache                            |
 | `service.py` | Composes fetch → compute → cache                               |
-| `api.py`     | HTTP surface: validation and error mapping                     |
+| `api.py`     | Async HTTP surface: validation, worker offload, error mapping   |
 | `main.py`    | App factory, CORS, configuration                               |
 | `models.py`  | Typed payload shapes and the `MAG7` symbol universe            |
 
@@ -136,9 +137,10 @@ cd backend  && .venv/bin/python -m pytest && .venv/bin/python -m mypy
 cd frontend && npm test && npm run typecheck
 ```
 
-33 backend tests cover the return math (including NaN gaps, rounding, and unsorted
+35 backend tests cover the return math (including NaN gaps, rounding, and unsorted
 input), cache TTL/LRU behavior, service caching and error propagation, unavailable-symbol
-reporting, yfinance response normalization, and every endpoint status path. 66 frontend
+reporting, async request concurrency, yfinance response normalization, and every endpoint
+status path. 93 frontend
 tests cover the statistics helpers and the interaction geometry — zoom range resolution,
 tooltip anchoring, brush label placement, drag-vs-click classification, and track
 selection. The backend is fully type-annotated and passes `mypy` with

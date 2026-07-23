@@ -6,6 +6,7 @@ from datetime import date
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.concurrency import run_in_threadpool
 
 from .fetcher import PriceFetchError
 from .models import MAG7
@@ -17,14 +18,14 @@ router = APIRouter()
 MAX_RANGE_DAYS = 365 * 10
 
 
-def get_service(request: Request) -> ReturnsService:
+async def get_service(request: Request) -> ReturnsService:
     """Resolve the process-wide service instance attached at app startup."""
     service: ReturnsService = request.app.state.returns_service
     return service
 
 
 @router.get("/returns")
-def get_returns(
+async def get_returns(
     start: Annotated[date, Query(description="Inclusive start date, YYYY-MM-DD")],
     end: Annotated[date, Query(description="Inclusive end date, YYYY-MM-DD")],
     service: Annotated[ReturnsService, Depends(get_service)],
@@ -43,7 +44,10 @@ def get_returns(
         )
 
     try:
-        payload = service.get_returns(start, end)
+        # yfinance and pandas expose synchronous APIs. Keep that blocking work
+        # out of the event-loop thread while retaining the synchronous,
+        # independently testable service boundary.
+        payload = await run_in_threadpool(service.get_returns, start, end)
     except PriceFetchError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
@@ -57,12 +61,12 @@ def get_returns(
 
 
 @router.get("/symbols")
-def get_symbols() -> dict[str, list[str]]:
+async def get_symbols() -> dict[str, list[str]]:
     """The symbol universe, so the UI does not hardcode the ticker list."""
     return {"symbols": list(MAG7)}
 
 
 @router.get("/health")
-def health() -> dict[str, str]:
+async def health() -> dict[str, str]:
     """Liveness probe."""
     return {"status": "ok"}
