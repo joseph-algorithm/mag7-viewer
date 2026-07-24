@@ -61,7 +61,9 @@ dates, and min/max/mean plus cumulative return.
 Daily and compounded lines use independent symmetric Y domains with a shared
 zero centre, so long-window compounded growth cannot flatten daily moves. The
 visible Y-axis labels describe daily returns; compounded values remain unscaled
-in the tooltip and card header.
+in the tooltip and card header. Both series use the same blue; daily moves use a
+lighter, thinner line while compounded performance uses a stronger line drawn
+above it, with a matching key above the grid.
 
 The frontend derives each running compounded series once when a successful API
 payload enters `useReturns` state. API response points remain immutable, and

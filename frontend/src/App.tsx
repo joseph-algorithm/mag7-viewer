@@ -166,7 +166,17 @@ export default function App() {
             <p className="eyebrow">Performance detail</p>
             <h2>Magnificent Seven returns</h2>
           </div>
-          <p>Compare daily moves and independently scaled compounded performance.</p>
+        <p>
+          Independently scaled:
+          <span className="series-key">
+            <span className="series-swatch daily" aria-hidden="true" />
+            Daily
+          </span>
+          <span className="series-key">
+            <span className="series-swatch compounded" aria-hidden="true" />
+            Compounded
+          </span>
+        </p>
         </header>
 
         {error && <ErrorBanner message={error} onRetry={retry} />}

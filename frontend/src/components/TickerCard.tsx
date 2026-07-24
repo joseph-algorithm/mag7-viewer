@@ -414,21 +414,22 @@ export function TickerCard({
               type="monotone"
               dataKey="return"
               name="Daily"
-              stroke={positive ? 'var(--up)' : 'var(--down)'}
-							strokeWidth={0.6}
-							dot={false}
-							isAnimationActive={false}
+              stroke="var(--daily-series)"
+              strokeWidth={0.7}
+              strokeOpacity={0.55}
+              dot={false}
+              isAnimationActive={false}
             />
             <Line
               yAxisId="compounded"
               type="monotone"
               dataKey="compoundedReturn"
               name="Compounded"
-              stroke={positive ? 'var(--up)' : 'var(--down)'}
-							strokeWidth={0.4}
-							dot={false}
-							isAnimationActive={false}
-						/>
+              stroke="var(--daily-series)"
+              strokeWidth={1.8}
+              dot={false}
+              isAnimationActive={false}
+            />
 						{/* Live preview of the range being dragged across the plot area. */}
 						{dragStart !== null && dragEnd !== null && dragStart !== dragEnd && (
               <ReferenceArea

@@ -6,9 +6,10 @@
 	--text: #1a1d21;
 	--muted: #6b7280;
 	--grid: #eceef1;
-	--axis: #b6bcc4;
-	--up: #0f9d58;
-	--down: #d93025;
+  --axis: #b6bcc4;
+  --up: #0f9d58;
+  --down: #d93025;
+  --daily-series: #2563eb;
 
 	color-scheme: light dark;
 	font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -23,9 +24,10 @@
 		--text: #e8eaed;
 		--muted: #9aa2ac;
 		--grid: #262b31;
-		--axis: #4b535c;
-		--up: #4ade80;
-		--down: #f87171;
+    --axis: #4b535c;
+    --up: #4ade80;
+    --down: #f87171;
+    --daily-series: #60a5fa;
 	}
 }
 
@@ -151,6 +153,33 @@ body {
   font-size: 0.8125rem;
   line-height: 1.45;
   text-align: right;
+}
+
+.series-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.75rem;
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.series-swatch {
+  display: inline-block;
+  width: 1.25rem;
+  height: 2px;
+  border-radius: 999px;
+}
+
+.series-swatch.daily {
+  height: 1px;
+  background: var(--daily-series);
+  opacity: 0.7;
+}
+
+.series-swatch.compounded {
+  background: var(--daily-series);
 }
 
 .date-range {
