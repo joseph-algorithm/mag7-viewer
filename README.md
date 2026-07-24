@@ -11,7 +11,8 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 
 **Charts**
 
-- Daily and running compounded return lines per ticker, in a responsive grid
+- Daily and running compounded return lines per ticker, independently scaled
+  around a shared zero centre in a responsive grid
 - Drag across any chart to zoom every chart; double-click or hit a reset icon to restore all
 - Linked range slider under each chart — adjusting any handle or selected window moves
 every chart to the same date range

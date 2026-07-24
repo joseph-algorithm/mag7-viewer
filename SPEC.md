@@ -58,6 +58,11 @@ One card per symbol in the `data` map. Each card shows daily and running
 compounded return lines, a linked range slider beneath them, the selected range's
 dates, and min/max/mean plus cumulative return.
 
+Daily and compounded lines use independent symmetric Y domains with a shared
+zero centre, so long-window compounded growth cannot flatten daily moves. The
+visible Y-axis labels describe daily returns; compounded values remain unscaled
+in the tooltip and card header.
+
 The frontend derives each running compounded series once when a successful API
 payload enters `useReturns` state. API response points remain immutable, and
 cards consume the chart-ready state without deriving or mutating shared data.

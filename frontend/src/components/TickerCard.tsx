@@ -15,6 +15,7 @@ import {
 import { ResetZoomButton } from './ResetZoomButton'
 import { placeBrushLabels } from '../lib/brushLabels'
 import { selectionFromDrag } from '../lib/brushSelect'
+import { symmetricReturnDomain } from '../lib/chartScale'
 import { isDragGesture } from '../lib/dragIntent'
 import {
   brushDateRangeFromIndices,
@@ -379,14 +380,27 @@ export function TickerCard({
 					>
 						<CartesianGrid strokeDasharray="3 3" stroke="var(--grid)" />
 						<XAxis dataKey="date" tick={{ fontSize: 11 }} minTickGap={28} />
-						<YAxis
-							tick={{ fontSize: 11 }}
-							width={52}
-							tickFormatter={(value: number) => `${(value * 100).toFixed(1)}%`}
-						/>
-						<Tooltip
-							formatter={(value: number) => [formatPercent(value), 'Return']}
-							labelFormatter={(label: string) => label}
+            <YAxis
+              yAxisId="daily"
+              tick={{ fontSize: 11 }}
+              width={52}
+              domain={symmetricReturnDomain}
+              tickFormatter={(value: number) => `${(value * 100).toFixed(1)}%`}
+            />
+            {/*
+             * Daily and compounded returns have very different magnitudes over
+             * long windows. Give the cumulative line its own zero-centred
+             * domain so it cannot flatten the daily series. Its exact values
+             * remain available in the tooltip and card header.
+             */}
+            <YAxis
+              yAxisId="compounded"
+              domain={symmetricReturnDomain}
+              hide
+            />
+            <Tooltip
+              formatter={(value: number, name: string) => [formatPercent(value), name]}
+              labelFormatter={(label: string) => label}
 							contentStyle={{ fontSize: 12 }}
 							position={tooltipPosition}
 							// The wrapper animates its transform by default, so the panel
@@ -394,27 +408,32 @@ export function TickerCard({
 							isAnimationActive={false}
 							allowEscapeViewBox={{ x: false, y: false }}
 						/>
-						<ReferenceLine y={0} stroke="var(--axis)" />
-						<Line
-							type="monotone"
-							dataKey="return"
-							stroke={positive ? 'var(--up)' : 'var(--down)'}
-							strokeWidth={1.6}
+            <ReferenceLine yAxisId="daily" y={0} stroke="var(--axis)" />
+            <Line
+              yAxisId="daily"
+              type="monotone"
+              dataKey="return"
+              name="Daily"
+              stroke={positive ? 'var(--up)' : 'var(--down)'}
+							strokeWidth={0.6}
 							dot={false}
 							isAnimationActive={false}
-						/>
-						<Line
-							type="monotone"
-							dataKey="compoundedReturn"
-							stroke={positive ? 'var(--up)' : 'var(--down)'}
+            />
+            <Line
+              yAxisId="compounded"
+              type="monotone"
+              dataKey="compoundedReturn"
+              name="Compounded"
+              stroke={positive ? 'var(--up)' : 'var(--down)'}
 							strokeWidth={0.4}
 							dot={false}
 							isAnimationActive={false}
 						/>
 						{/* Live preview of the range being dragged across the plot area. */}
 						{dragStart !== null && dragEnd !== null && dragStart !== dragEnd && (
-							<ReferenceArea
-								x1={dragStart}
+              <ReferenceArea
+                yAxisId="daily"
+                x1={dragStart}
 								x2={dragEnd}
 								strokeOpacity={0.3}
 								fill="var(--axis)"

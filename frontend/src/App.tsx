@@ -166,7 +166,7 @@ export default function App() {
             <p className="eyebrow">Performance detail</p>
             <h2>Magnificent Seven returns</h2>
           </div>
-          <p>Compare daily moves and compounded performance across the full group.</p>
+          <p>Compare daily moves and independently scaled compounded performance.</p>
         </header>
 
         {error && <ErrorBanner message={error} onRetry={retry} />}
