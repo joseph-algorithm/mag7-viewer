@@ -36,8 +36,8 @@ function yearTicks(min: string, max: string): { label: string; percent: number }
 /**
  * The master timeline: its selected window *is* the fetched range.
  *
- * Deliberately a different tier from the per-card sliders — full width,
- * labelled, with year ticks and its dates shown — because the two look alike
+ * Deliberately a different tier from the per-card sliders — grouped with the
+ * primary date controls, labelled, with year ticks and its dates shown — because the two look alike
  * but mean different things. A card slider zooms within data already loaded;
  * this one decides what gets loaded.
  *

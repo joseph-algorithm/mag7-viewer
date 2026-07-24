@@ -37,8 +37,9 @@ from accepting and advancing other requests.
 
 ## Master range control
 
-A full-width slider under the header whose selected window **is** the fetched
-range, plus preset chips (`1M · 3M · 6M · YTD · 1Y · 5Y · Max`).
+A master/detail layout places all date controls in a sidebar and the results in
+the main detail area. The sidebar slider's selected window **is** the fetched
+range, with preset chips (`1M · 3M · 6M · YTD · 1Y · 5Y · Max`).
 
 | Rule | |
 |---|---|
@@ -54,7 +55,7 @@ range, plus preset chips (`1M · 3M · 6M · YTD · 1Y · 5Y · Max`).
 ## Chart card
 
 One card per symbol in the `data` map. Each card shows daily and running
-compounded return lines, a range slider beneath them, the selected range's
+compounded return lines, a linked range slider beneath them, the selected range's
 dates, and min/max/mean plus cumulative return.
 
 The frontend derives each running compounded series once when a successful API
@@ -75,14 +76,17 @@ cards consume the chart-ready state without deriving or mutating shared data.
 
 Invariants:
 
-- The slider and the chart always agree — they are driven by one piece of state.
+- Every slider and chart agrees — they are driven by one shared date window.
+  Changing a slider, dragging a plot, or resetting from any card updates all
+  cards. Each symbol maps that window to its nearest available local points.
 - A drag whose pointer travel exceeds the slop threshold is a drag, not a
   click. A double-click must never undo a zoom the same gesture just created.
 - A click with no travel leaves the range unchanged; it must not collapse the
   range to a point.
-- Zoom is per card. Zooming one card must not affect the other six.
-- The reset control appears only when zoomed, so its presence is also the
-  signal that there is something to reset.
+- Zoom is shared across cards. Zooming or resetting one card must affect the
+  other six.
+- Reset controls appear only when the shared grid is zoomed, so their presence
+  is also the signal that there is something to reset.
 
 ### Tooltip
 

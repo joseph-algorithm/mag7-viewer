@@ -1,6 +1,7 @@
 :root {
-	--bg: #f7f8fa;
-	--surface: #ffffff;
+  --bg: #f7f8fa;
+  --rail: #f1f3f6;
+  --surface: #ffffff;
 	--border: #e2e5ea;
 	--text: #1a1d21;
 	--muted: #6b7280;
@@ -15,8 +16,9 @@
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		--bg: #14171a;
-		--surface: #1c2024;
+    --bg: #14171a;
+    --rail: #181c20;
+    --surface: #1c2024;
 		--border: #2c3238;
 		--text: #e8eaed;
 		--muted: #9aa2ac;
@@ -28,48 +30,135 @@
 }
 
 * {
-	box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
 body {
-	margin: 0;
-	background: var(--bg);
-	color: var(--text);
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .app {
-	max-width: 1400px;
-	margin: 0 auto;
-	padding: 1.5rem 1.25rem 3rem;
+  display: grid;
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+  align-items: stretch;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.sidebar {
+  padding: 1.5rem 1.25rem 3rem;
+  border-right: 1px solid var(--border);
+  background: var(--rail);
+}
+
+.sidebar-inner {
+  position: sticky;
+  top: 1.5rem;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .app-header {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-end;
-	justify-content: space-between;
-	gap: 1rem;
-	margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .app-header h1 {
-	margin: 0;
-	font-size: 1.5rem;
-	letter-spacing: -0.01em;
+  margin: 0.25rem 0 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
 }
 
 .subtitle {
-	margin: 0.25rem 0 0;
-	color: var(--muted);
-	font-size: 0.875rem;
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.control-panel {
+  padding-top: 1.25rem;
+}
+
+.control-panel-heading {
+  margin-bottom: 1rem;
+}
+
+.control-panel-heading h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1rem;
+}
+
+.control-panel-heading > p:last-child {
+  margin: 0.375rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.main-area {
+  min-width: 0;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.detail-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  min-height: 5.25rem;
+  margin-bottom: 1.25rem;
+  padding: 0 0.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-header h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+.detail-header > p {
+  max-width: 30rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  text-align: right;
 }
 
 .date-range {
-	display: flex;
-	gap: 0.75rem;
-	border: none;
-	margin: 0;
-	padding: 0;
+  display: grid;
+  gap: 0.875rem;
+  border: none;
+  margin: 0;
+  padding: 0;
 }
 
 .date-range:disabled {
@@ -85,9 +174,10 @@ body {
 }
 
 .date-range input {
-	padding: 0.4rem 0.5rem;
-	border: 1px solid var(--border);
-	border-radius: 6px;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 	background: var(--surface);
 	color: var(--text);
 	font: inherit;
@@ -724,26 +814,19 @@ kbd {
 /*
  * Master range control.
  *
- * A different tier from the per-card sliders on purpose: full width, labelled,
- * with year ticks and its dates shown. A card slider zooms within data already
- * loaded; this one decides what gets loaded, and the two must not be mistaken
- * for each other.
+ * A different tier from the per-card sliders on purpose: grouped with the
+ * sidebar date controls, labelled, with year ticks and its dates shown. A card
+ * slider zooms within data already loaded; this one decides what gets loaded,
+ * and the two must not be mistaken for each other.
  */
 .master-range {
-	margin-bottom: 1.5rem;
-	padding: 0.75rem 1rem 0.5rem;
-	border: 1px solid var(--border);
-	border-radius: 10px;
-	background: var(--surface);
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
 }
 
 .master-range-top {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.75rem;
-	margin-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .master-range-label {
@@ -754,15 +837,17 @@ kbd {
 }
 
 .master-range-presets {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.25rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin-top: 0.5rem;
 }
 
 .range-preset {
-	padding: 0.2rem 0.55rem;
-	border: 1px solid var(--border);
-	border-radius: 999px;
+  min-width: 0;
+  padding: 0.3rem 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
 	background: transparent;
 	color: var(--muted);
 	font: inherit;
@@ -788,10 +873,10 @@ kbd {
 
 /* Taller than a card slider, so the tier difference reads at a glance. */
 .master-range-track {
-	position: relative;
-	height: 30px;
-	border-radius: 6px;
-	background: var(--grid);
+  position: relative;
+  height: 34px;
+  border-radius: 6px;
+  background: var(--grid);
 }
 
 .master-range-selected {
@@ -814,12 +899,21 @@ kbd {
 }
 
 .master-range-tick-label {
-	position: absolute;
-	top: 100%;
-	left: 2px;
-	font-size: 0.625rem;
-	color: var(--muted);
-	font-variant-numeric: tabular-nums;
+  position: absolute;
+  top: 100%;
+  left: 2px;
+  font-size: 0.5625rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sidebar .master-range-tick:nth-of-type(even) .master-range-tick-label {
+  display: none;
+}
+
+.sidebar .master-range-tick:last-of-type .master-range-tick-label {
+  right: 2px;
+  left: auto;
 }
 
 /*
@@ -839,9 +933,9 @@ kbd {
 }
 
 .master-range-input::-webkit-slider-thumb {
-	appearance: none;
-	width: 10px;
-	height: 26px;
+  appearance: none;
+  width: 10px;
+  height: 30px;
 	border: 1px solid var(--surface);
 	border-radius: 3px;
 	background: var(--muted);
@@ -850,8 +944,8 @@ kbd {
 }
 
 .master-range-input::-moz-range-thumb {
-	width: 10px;
-	height: 26px;
+  width: 10px;
+  height: 30px;
 	border: 1px solid var(--surface);
 	border-radius: 3px;
 	background: var(--muted);
@@ -865,10 +959,64 @@ kbd {
 }
 
 .master-range-dates {
-	display: flex;
-	justify-content: space-between;
+  display: flex;
+  justify-content: space-between;
 	margin-top: 0.875rem;
 	font-size: 0.6875rem;
 	color: var(--muted);
-	font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 960px) {
+  .app {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding: 1rem 0.75rem 2rem;
+  }
+
+  .sidebar {
+    position: static;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+
+  .sidebar-inner {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .main-area {
+    padding: 0;
+  }
+
+  .date-range {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sidebar .master-range-tick-label {
+    display: inline;
+  }
+}
+
+@media (max-width: 600px) {
+  .date-range {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-header {
+    display: block;
+    min-height: 0;
+  }
+
+  .detail-header > p {
+    margin-top: 0.5rem;
+    text-align: left;
+  }
+
+  .sidebar .master-range-tick:nth-of-type(even) .master-range-tick-label {
+    display: none;
+  }
 }

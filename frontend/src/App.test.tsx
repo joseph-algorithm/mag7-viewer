@@ -28,9 +28,16 @@ describe('App date range controls', () => {
   it('keeps controls and existing results visible while a request is loading', () => {
     const markup = renderToStaticMarkup(<App />)
 
-		expect(markup).toContain('aria-label="Range start"')
-		expect(markup).toContain('id="start-date"')
-		expect(markup).not.toContain('disabled=""')
+    const sidebarEnd = markup.indexOf('</aside>')
+    const mainStart = markup.indexOf('<main class="main-area">')
+
+    expect(markup).toContain('<aside class="sidebar" aria-label="Viewer controls">')
+    expect(mainStart).toBeGreaterThan(sidebarEnd)
+    expect(markup.indexOf('id="start-date"')).toBeLessThan(sidebarEnd)
+    expect(markup.indexOf('aria-label="Range start"')).toBeLessThan(sidebarEnd)
+    expect(markup).toContain('aria-label="Range start"')
+    expect(markup).toContain('id="start-date"')
+    expect(markup).not.toContain('disabled=""')
 		expect(markup).toContain('<div class="results" aria-busy="true">')
     expect(markup).not.toContain('data-refreshing')
   })

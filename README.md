@@ -12,9 +12,9 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 **Charts**
 
 - Daily and running compounded return lines per ticker, in a responsive grid
-- Drag across a chart to zoom; double-click it or hit the reset icon to restore
-- Range slider under each chart, synced with the chart's zoom — drag it to select a
-  range, or drag the selected window to pan
+- Drag across any chart to zoom every chart; double-click or hit a reset icon to restore all
+- Linked range slider under each chart — adjusting any handle or selected window moves
+every chart to the same date range
 - Tooltip pinned at a fixed offset from the cursor, so it does not jitter
 - Min, max, mean and cumulative return per ticker
 
@@ -28,7 +28,7 @@ Behaviour contract: [SPEC.md](SPEC.md). Working on this repo with an agent: [AGE
 
 **Interface**
 
-- Master range slider previews continuously, then fetches on release/keyboard commit; preset chips (`1M`…`Max`) and date fields commit immediately
+- Master/detail layout keeps the date fields, preset chips, and master range slider together in a sidebar; the slider previews continuously, then fetches on release/keyboard commit
 - Date controls stay interactive while committed requests are debounced; superseded in-flight requests are aborted
 - Committed ranges are mirrored to `start` and `end` URL parameters and restored on refresh, so a selected view is bookmarkable
 - Sortable cross-ticker summary table with stable column widths

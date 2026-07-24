@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { clampRange, fullRange, isFullRange, resolveDragSelection } from './dragRange'
+import {
+  brushDateRangeFromIndices,
+  clampRange,
+  fullRange,
+  indicesFromBrushDateRange,
+  isFullRange,
+  resolveDragSelection,
+} from './dragRange'
 
 const labels = ['2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05', '2024-01-08']
 
@@ -70,5 +77,43 @@ describe('clampRange', () => {
 
 	it('handles an empty series', () => {
 		expect(clampRange({ startIndex: 2, endIndex: 4 }, 0)).toEqual({ startIndex: 0, endIndex: 0 })
-	})
+  })
+})
+
+describe('shared brush date ranges', () => {
+  it('turns one brush selection into a shared date window', () => {
+    expect(brushDateRangeFromIndices(labels, { startIndex: 1, endIndex: 3 })).toEqual({
+      start: '2024-01-03',
+      end: '2024-01-05',
+    })
+  })
+
+  it('uses null for the full range so every brush can reset together', () => {
+    expect(brushDateRangeFromIndices(labels, fullRange(labels.length))).toBeNull()
+  })
+
+  it('maps the shared dates around gaps in another symbol', () => {
+    const labelsWithGaps = ['2024-01-02', '2024-01-04', '2024-01-08']
+
+    expect(
+      indicesFromBrushDateRange(labelsWithGaps, {
+        start: '2024-01-03',
+        end: '2024-01-05',
+      }),
+    ).toEqual({ startIndex: 1, endIndex: 1 })
+  })
+
+  it('restores each symbol to its own full range on reset', () => {
+    expect(indicesFromBrushDateRange(labels, null)).toEqual(fullRange(labels.length))
+    expect(indicesFromBrushDateRange(labels.slice(0, 3), null)).toEqual(fullRange(3))
+  })
+
+  it('clamps a shared window outside a symbol range to its nearest point', () => {
+    expect(
+      indicesFromBrushDateRange(labels, {
+        start: '2025-01-01',
+        end: '2025-02-01',
+      }),
+    ).toEqual({ startIndex: labels.length - 1, endIndex: labels.length - 1 })
+  })
 })

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
 	Brush,
 	CartesianGrid,
@@ -16,14 +16,22 @@ import { ResetZoomButton } from './ResetZoomButton'
 import { placeBrushLabels } from '../lib/brushLabels'
 import { selectionFromDrag } from '../lib/brushSelect'
 import { isDragGesture } from '../lib/dragIntent'
-import { clampRange, fullRange, isFullRange, resolveDragSelection } from '../lib/dragRange'
+import {
+  brushDateRangeFromIndices,
+  indicesFromBrushDateRange,
+  resolveDragSelection,
+  type BrushDateRange,
+  type IndexRange,
+} from '../lib/dragRange'
 import { computeStats, computeVisibleStats, formatPercent } from '../lib/stats'
 import { TOOLTIP_Y, anchorX } from '../lib/tooltipAnchor'
 import type { ChartReturnPoint } from '../types'
 
 interface TickerCardProps {
-	symbol: string
-	points: ChartReturnPoint[]
+  symbol: string
+  points: ChartReturnPoint[]
+  brushRange: BrushDateRange | null
+  onBrushRangeChange: (range: BrushDateRange | null) => void
 }
 
 /**
@@ -50,13 +58,17 @@ function labelOf(state: ChartMouseState | null): string | null {
 }
 
 /** One grid cell: a symbol's return series plus its min/max/mean footer. */
-export function TickerCard({ symbol, points }: TickerCardProps) {
-	const stats = computeStats(symbol, points)
-	const positive = stats.cumulative >= 0
+export function TickerCard({
+  symbol,
+  points,
+  brushRange,
+  onBrushRangeChange,
+}: TickerCardProps) {
+  const stats = computeStats(symbol, points)
+  const positive = stats.cumulative >= 0
 
-	const labels = useMemo(() => points.map((point) => point.date), [points])
-	const [range, setRange] = useState(() => fullRange(points.length))
-	const [dragStart, setDragStart] = useState<string | null>(null)
+  const labels = useMemo(() => points.map((point) => point.date), [points])
+  const [dragStart, setDragStart] = useState<string | null>(null)
 	const [dragEnd, setDragEnd] = useState<string | null>(null)
 	const chartRef = useRef<HTMLDivElement>(null)
 	const [cursorX, setCursorX] = useState<number | null>(null)
@@ -92,15 +104,21 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 	 * applies. This must run before paint: a passive effect briefly renders the
 	 * new series through the old range indices, then snaps to the full range.
 	 */
-	useLayoutEffect(() => {
-		setRange(fullRange(points.length))
-		setDragStart(null)
-		setDragEnd(null)
-	}, [points])
+  useLayoutEffect(() => {
+    setDragStart(null)
+    setDragEnd(null)
+  }, [points])
 
-	const visible = clampRange(range, points.length)
-	const zoomed = !isFullRange(visible, points.length)
-	zoomedRef.current = zoomed
+  const visible = indicesFromBrushDateRange(labels, brushRange)
+  const zoomed = brushRange !== null
+  zoomedRef.current = zoomed
+
+  const setVisibleRange = useCallback(
+    (next: IndexRange) => {
+      onBrushRangeChange(brushDateRangeFromIndices(labels, next))
+    },
+    [labels, onBrushRangeChange],
+  )
 
 	// Memoized against the window, not the render: cursor tracking re-renders
 	// the card on every mouse move while the window is unchanged.
@@ -169,7 +187,7 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 			const selection = selectionFromDrag(startX, relativeX(event), geometry())
 			startX = null
 			setTrackDrag(null)
-			if (selection) setRange(selection)
+    if (selection) setVisibleRange(selection)
 		}
 
 		track.addEventListener('mousedown', onDown)
@@ -182,7 +200,7 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 			window.removeEventListener('mousemove', onMove)
 			window.removeEventListener('mouseup', onUp)
 		}
-	}, [points.length, brushCenterY])
+  }, [points.length, brushCenterY, setVisibleRange])
 
 	/**
 	 * Measure the brush handles and place the labels under them.
@@ -278,18 +296,18 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 				}
 
 	/**
-	 * Commit the drag. Because the brush is controlled by the same `range` state, the
-	 * slider handles land on the dragged window without any extra wiring.
-	 */
-	function commitDrag() {
-		const selection = resolveDragSelection(labels, dragStart, dragEnd)
-		if (selection) setRange(selection)
-		setDragStart(null)
-		setDragEnd(null)
-	}
+   * Commit the drag. The shared date window moves every chart and brush to
+   * the same time range.
+   */
+  function commitDrag() {
+    const selection = resolveDragSelection(labels, dragStart, dragEnd)
+    if (selection) setVisibleRange(selection)
+    setDragStart(null)
+    setDragEnd(null)
+  }
 
-	function resetZoom() {
-		setRange(fullRange(points.length))
+  function resetZoom() {
+    onBrushRangeChange(null)
 	}
 
 	/**
@@ -404,8 +422,8 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 							/>
 						)}
 						{/*
-						 * Controlled by the same state the drag writes, so the slider and the
-						 * plot always agree; dragging its handles feeds `range` straight back.
+             * Controlled by the shared date window, so dragging any slider
+             * moves every chart and brush in the grid.
 						 */}
 						<Brush
 							dataKey="date"
@@ -416,7 +434,7 @@ export function TickerCard({ symbol, points }: TickerCardProps) {
 							endIndex={visible.endIndex}
 							onChange={(next: { startIndex?: number; endIndex?: number }) => {
 								if (next.startIndex === undefined || next.endIndex === undefined) return
-								setRange({ startIndex: next.startIndex, endIndex: next.endIndex })
+                setVisibleRange({ startIndex: next.startIndex, endIndex: next.endIndex })
 							}}
 						/>
 					</LineChart>
