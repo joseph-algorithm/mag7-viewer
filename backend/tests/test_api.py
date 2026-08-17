@@ -25,7 +25,9 @@ def client(stub_fetch) -> TestClient:
 
 
 def test_returns_payload_matches_spec_shape(client: TestClient) -> None:
-    response = client.get("/returns", params={"start": "2024-01-02", "end": "2024-01-05"})
+    response = client.get(
+        "/returns", params={"start": "2024-01-02", "end": "2024-01-05"}
+    )
 
     assert response.status_code == 200
     body = response.json()
@@ -40,7 +42,35 @@ def test_returns_payload_matches_spec_shape(client: TestClient) -> None:
     )
 
 
-def test_symbol_with_no_prices_is_reported_not_omitted(close_frame: pd.DataFrame) -> None:
+def test_returns_payload_matches_spec_shape_with_symbols(client: TestClient) -> None:
+    response = client.get(
+        "/returns",
+        params={
+            "start": "2024-01-02",
+            "end": "2024-01-05",
+            "symbols": "MSFT,AAPL,F,IBM",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert set(body) == {"data", "unavailable"}
+    assert set(body["data"]) == set(MAG7)
+    assert body["unavailable"] == []
+    assert body["data"]["MSFT"][0] == {"date": "2024-01-03", "return": 0.01}
+    assert body["data"]["AAPL"][0] == {"date": "2024-01-03", "return": 0.01}
+    assert body["data"]["F"][0] == {"date": "2024-01-03", "return": 0.01}
+    assert body["data"]["IBM"][0] == {"date": "2024-01-03", "return": 0.01}
+    assert all(
+        set(point) == {"date", "return"}
+        for points in body["data"].values()
+        for point in points
+    )
+
+
+def test_symbol_with_no_prices_is_reported_not_omitted(
+    close_frame: pd.DataFrame,
+) -> None:
     """The regression this contract exists for: absence must never be silent."""
     partial = close_frame.drop(columns=["MSFT"])
     client = TestClient(
@@ -55,11 +85,15 @@ def test_symbol_with_no_prices_is_reported_not_omitted(close_frame: pd.DataFrame
     assert [item["symbol"] for item in body["unavailable"]] == ["MSFT"]
     assert body["unavailable"][0]["reason"]
     # Every requested symbol is accounted for in exactly one of the two buckets.
-    assert set(body["data"]) | {item["symbol"] for item in body["unavailable"]} == set(MAG7)
+    assert set(body["data"]) | {item["symbol"] for item in body["unavailable"]} == set(
+        MAG7
+    )
 
 
 def test_malformed_date_is_rejected(client: TestClient) -> None:
-    response = client.get("/returns", params={"start": "not-a-date", "end": "2024-01-05"})
+    response = client.get(
+        "/returns", params={"start": "not-a-date", "end": "2024-01-05"}
+    )
     assert response.status_code == 422
 
 
@@ -68,14 +102,18 @@ def test_missing_parameter_is_rejected(client: TestClient) -> None:
 
 
 def test_inverted_range_is_rejected(client: TestClient) -> None:
-    response = client.get("/returns", params={"start": "2024-02-01", "end": "2024-01-01"})
+    response = client.get(
+        "/returns", params={"start": "2024-02-01", "end": "2024-01-01"}
+    )
 
     assert response.status_code == 400
     assert "on or before" in response.json()["detail"]
 
 
 def test_excessive_range_is_rejected(client: TestClient) -> None:
-    response = client.get("/returns", params={"start": "1900-01-01", "end": "2024-01-01"})
+    response = client.get(
+        "/returns", params={"start": "1900-01-01", "end": "2024-01-01"}
+    )
     assert response.status_code == 400
 
 
@@ -84,7 +122,9 @@ def test_upstream_failure_maps_to_502_with_message() -> None:
         raise PriceFetchError("price provider request failed: connection reset")
 
     client = TestClient(create_app(service=ReturnsService(fetch=failing_fetch)))
-    response = client.get("/returns", params={"start": "2024-01-02", "end": "2024-01-05"})
+    response = client.get(
+        "/returns", params={"start": "2024-01-02", "end": "2024-01-05"}
+    )
 
     assert response.status_code == 502
     assert "connection reset" in response.json()["detail"]

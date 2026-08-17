@@ -37,11 +37,11 @@ class ReturnsService:
         cache: TTLCache[DateRange, ReturnsPayload] | None = None,
         fetch: Fetcher | None = None,
     ) -> None:
-        self.symbols = symbols
+        self.default_symbols = symbols
         self._cache: TTLCache[DateRange, ReturnsPayload] = cache or TTLCache()
         self._fetch: Fetcher = fetch or fetch_close_prices
 
-    def get_returns(self, start: date, end: date) -> ReturnsPayload:
+    def get_returns(self, start: date, end: date, symbols: tuple[str, ...] | None) -> ReturnsPayload:
         """Return the daily return series per symbol for the inclusive range.
 
         Every requested symbol is accounted for: those with at least one return
@@ -53,7 +53,8 @@ class ReturnsService:
         if cached is not None:
             return cached
 
-        close = self._fetch(self.symbols, start, end)
+        query_symbols = symbols or self.default_symbols
+        close = self._fetch(query_symbols, start, end)
         records = to_records(compute_daily_returns(close))
 
         data = {symbol: points for symbol, points in records.items() if points}
@@ -64,7 +65,7 @@ class ReturnsService:
                 # empty had prices that could not be differenced into a return.
                 reason=NO_COMPLETE_DAY_REASON if symbol in records else NO_DATA_REASON,
             )
-            for symbol in self.symbols
+            for symbol in query_symbols
             if symbol not in data
         ]
 
