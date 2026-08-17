@@ -28,8 +28,8 @@ async def get_service(request: Request) -> ReturnsService:
 async def get_returns(
     start: Annotated[date, Query(description="Inclusive start date, YYYY-MM-DD")],
     end: Annotated[date, Query(description="Inclusive end date, YYYY-MM-DD")],
-    symbols: Annotated[str, Query(description="List of symbols to include")],
     service: Annotated[ReturnsService, Depends(get_service)],
+    symbols: Annotated[str | None, Query(description="List of symbols to include")] = None,
 ) -> dict[str, Any]:
     """Daily percentage returns per MAG7 symbol over the inclusive date range.
 
@@ -44,7 +44,11 @@ async def get_returns(
             detail=f"date range is limited to {MAX_RANGE_DAYS} days",
         )
 
-    symbols_out = tuple([symbol.strip() for symbol in symbols.split(",")])
+    symbols_out = (
+        tuple(symbol.strip() for symbol in symbols.split(",") if symbol.strip())
+        if symbols is not None
+        else None
+    )
     try:
         # yfinance and pandas expose synchronous APIs. Keep that blocking work
         # out of the event-loop thread while retaining the synchronous,

@@ -13,7 +13,7 @@ import pandas as pd
 
 from .cache import TTLCache
 from .fetcher import PriceFetchError, fetch_close_prices
-from .models import MAG7, DateRange, ReturnsPayload, UnavailableSymbol
+from .models import MAG7, ReturnsPayload, UnavailableSymbol
 from .returns import compute_daily_returns, to_records
 
 #: Shown when a requested ticker came back with no usable prices at all.
@@ -26,6 +26,7 @@ NO_COMPLETE_DAY_REASON = (
 
 #: Signature every price source must satisfy; lets tests inject a fixture frame.
 Fetcher = Callable[[tuple[str, ...], date, date], pd.DataFrame]
+CacheKey = tuple[date, date, tuple[str, ...]]
 
 
 class ReturnsService:
@@ -34,26 +35,31 @@ class ReturnsService:
     def __init__(
         self,
         symbols: tuple[str, ...] = MAG7,
-        cache: TTLCache[DateRange, ReturnsPayload] | None = None,
+        cache: TTLCache[CacheKey, ReturnsPayload] | None = None,
         fetch: Fetcher | None = None,
     ) -> None:
         self.default_symbols = symbols
-        self._cache: TTLCache[DateRange, ReturnsPayload] = cache or TTLCache()
+        self._cache: TTLCache[CacheKey, ReturnsPayload] = cache or TTLCache()
         self._fetch: Fetcher = fetch or fetch_close_prices
 
-    def get_returns(self, start: date, end: date, symbols: tuple[str, ...] | None) -> ReturnsPayload:
+    def get_returns(
+        self,
+        start: date,
+        end: date,
+        symbols: tuple[str, ...] | None = None,
+    ) -> ReturnsPayload:
         """Return the daily return series per symbol for the inclusive range.
 
         Every requested symbol is accounted for: those with at least one return
         land in ``data``, the rest in ``unavailable`` with a reason. Raises
         :class:`~app.fetcher.PriceFetchError` only when *nothing* was usable.
         """
-        key: DateRange = (start, end)
+        query_symbols = symbols or self.default_symbols
+        key: CacheKey = (start, end, query_symbols)
         cached = self._cache.get(key)
         if cached is not None:
             return cached
 
-        query_symbols = symbols or self.default_symbols
         close = self._fetch(query_symbols, start, end)
         records = to_records(compute_daily_returns(close))
 

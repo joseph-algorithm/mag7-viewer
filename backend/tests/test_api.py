@@ -55,12 +55,13 @@ def test_returns_payload_matches_spec_shape_with_symbols(client: TestClient) -> 
     assert response.status_code == 200
     body = response.json()
     assert set(body) == {"data", "unavailable"}
-    assert set(body["data"]) == set(MAG7)
-    assert body["unavailable"] == []
+    assert set(body["data"]) == {"MSFT", "AAPL"}
+    assert [item["symbol"] for item in body["unavailable"]] == ["F", "IBM"]
     assert body["data"]["MSFT"][0] == {"date": "2024-01-03", "return": 0.01}
-    assert body["data"]["AAPL"][0] == {"date": "2024-01-03", "return": 0.01}
-    assert body["data"]["F"][0] == {"date": "2024-01-03", "return": 0.01}
-    assert body["data"]["IBM"][0] == {"date": "2024-01-03", "return": 0.01}
+    assert body["data"]["AAPL"][0] == {"date": "2024-01-03", "return": -0.01}
+    assert set(body["data"]) | {
+        item["symbol"] for item in body["unavailable"]
+    } == {"MSFT", "AAPL", "F", "IBM"}
     assert all(
         set(point) == {"date", "return"}
         for points in body["data"].values()

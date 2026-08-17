@@ -100,3 +100,20 @@ def test_unavailable_list_survives_the_cache(close_frame: pd.DataFrame) -> None:
     second = service.get_returns(START, END)
 
     assert first.unavailable == second.unavailable
+
+
+def test_symbol_set_is_part_of_the_cache_key(close_frame: pd.DataFrame) -> None:
+    calls: list[tuple[str, ...]] = []
+
+    def recording_fetch(
+        symbols: tuple[str, ...], start: date, end: date
+    ) -> pd.DataFrame:
+        calls.append(symbols)
+        return close_frame.loc[:, [symbol for symbol in symbols if symbol in close_frame]]
+
+    service = ReturnsService(fetch=recording_fetch)
+    service.get_returns(START, END)
+    subset = service.get_returns(START, END, ("MSFT", "AAPL"))
+
+    assert calls == [service.default_symbols, ("MSFT", "AAPL")]
+    assert set(subset.data) == {"MSFT", "AAPL"}
